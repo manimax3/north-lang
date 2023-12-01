@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # Set the project name to your project name, my project isn't very descriptive
-project(projectname VERSION 0.0.1 LANGUAGES C CXX)
+project(north-lang VERSION 0.0.1 LANGUAGES C CXX)
 include(cmake/StandardProjectSettings.cmake)
 include(cmake/PreventInSourceBuilds.cmake)
 

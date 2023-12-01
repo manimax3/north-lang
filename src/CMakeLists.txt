@@ -1,5 +1,5 @@
-add_executable(testproject main.cpp)
+add_executable(north main.cpp)
 
-target_link_libraries(testproject PRIVATE 
+target_link_libraries(north PRIVATE 
 	project_options
 	project_warnings)
