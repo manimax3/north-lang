@@ -1,10 +1,13 @@
 #include <array>
+#include <charconv>
 #include <cstdint>
 #include <fmt/core.h>
 #include <iostream>
 #include <span>
 #include <stack>
 #include <string_view>
+#include <unordered_map>
+#include <variant>
 #include <vector>
 
 struct Token {
@@ -242,13 +245,103 @@ Procedure parse_procedure(std::span<Token> input)
 	return proc;
 }
 
+struct Identifier : Token {};
+using Value = std::variant<Identifier, std::string_view, double, int, char *, bool>;
+
+struct Environment {
+	std::unordered_map<std::string_view, Procedure> procedures;
+	std::unordered_map<std::string_view, Value>     variables;
+	std::vector<Value>                              stack;
+};
+
+void eval_proc(const Procedure &proc, Environment &env)
+{
+	for (std::size_t ic = 0; ic < proc.body.size(); ++ic) {
+		const auto &inst  = proc.body.at(ic);
+		const auto &token = inst.corresponding_token;
+		switch (token.type) {
+		case Token::Numeric: {
+			double value = 0.;
+			std::from_chars(token.content.data(), token.content.data() + token.content.size(), value);
+			env.stack.emplace_back(value);
+			break;
+		}
+		case Token::StringLiteral: {
+			env.stack.emplace_back(token.content);
+			break;
+		}
+		case Token::Identifier: {
+			if (env.procedures.contains(token.content)) {
+				eval_proc(env.procedures[token.content], env);
+			} else if (token.content == "true") {
+				env.stack.emplace_back(true);
+			} else if (token.content == "false") {
+				env.stack.emplace_back(false);
+			} else if (token.content == "print") {
+				const auto &v = env.stack.back();
+				if (auto *sv = std::get_if<std::string_view>(&v); sv != nullptr) {
+					std::cout << *sv << std::endl;
+				}
+				env.stack.erase(env.stack.end() - 1);
+			} else {
+				env.stack.emplace_back(Identifier{ token });
+			}
+			break;
+		}
+		case Token::Keyword_Do: {
+			if (env.stack.empty()) {
+				std::cerr << "Expected value on stack but empty\n";
+				std::terminate();
+			}
+
+			const auto top = env.stack.back();
+			env.stack.erase(env.stack.end() - 1);
+			if (const bool *v = std::get_if<bool>(&top); v == nullptr) {
+				std::cerr << "Expected boolean value on stack\n";
+				std::terminate();
+			} else if (!(*v)) {
+				ic = inst.forward_jump;
+				continue;
+			}
+
+			break;
+		}
+		case Token::Keyword_End: {
+			const auto &do_inst     = proc.body.at(inst.backward_jump);
+			const auto &branch_inst = proc.body.at(do_inst.backward_jump);
+
+			switch (branch_inst.corresponding_token.type) {
+			case Token::Keyword_If:
+				break;
+			case Token::Keyword_While:
+				ic = do_inst.backward_jump;
+				break;
+			default:
+				std::cerr << "Unexpected branching instruction\n";
+				std::terminate();
+				break;
+			}
+
+			break;
+		}
+		case Token::Keyword_While:
+		case Token::Keyword_If:
+			break;
+
+		default:
+			std::cerr << fmt::format("Unexpected token recieved {}\n", token.type);
+			std::terminate();
+			break;
+		}
+	}
+}
+
 int main()
 {
 	constexpr std::string_view input{
 		R"(
 		proc main do
-		while 10 do 10 10 + end
-		10 10 +
+		if true do "Hallo Welt" print end
 		end
 		)"
 	};
@@ -266,6 +359,9 @@ int main()
 		std::cout << fmt::format(" I {} Type: {} B: {} F: {}\n", i, inst.corresponding_token.content,
 								 inst.backward_jump, inst.forward_jump);
 	}
+
+	Environment environ;
+	eval_proc(proc, environ);
 
 	return 0;
 }
