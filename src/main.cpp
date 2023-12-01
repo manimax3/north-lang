@@ -1,6 +1,6 @@
 #include <array>
 #include <cstdint>
-#include <format>
+#include <fmt/core.h>
 #include <iostream>
 #include <span>
 #include <stack>
@@ -150,12 +150,12 @@ struct Procedure {
 Token expect(std::span<Token> &input, Token::TokenType type)
 {
 	if (input.empty()) {
-		std::cerr << std::format("Expected token of type {}. Got empty sequence\n", static_cast<int>(type));
+		std::cerr << fmt::format("Expected token of type {}. Got empty sequence\n", static_cast<int>(type));
 		std::exit(1);
 	}
 
 	if (input.front().type != type) {
-		std::cerr << std::format("Expected token of type {} got type {} with content {}\n", static_cast<int>(type),
+		std::cerr << fmt::format("Expected token of type {} got type {} with content {}\n", static_cast<int>(type),
 								 static_cast<int>(input.front().type), input.front().content);
 		std::exit(1);
 	}
