@@ -66,9 +66,22 @@ std::vector<Token> lex(std::string_view input)
 {
 	std::vector<Token> result;
 
+	int line_counter = 0;
+	int col_counter  = 0;
+
 	for (auto it = input.begin(); it != input.end(); ++it) {
 		const auto c = *it;
-		Token      token;
+
+		if (c == '\n') {
+			col_counter = 0;
+			line_counter++;
+			continue;
+		}
+
+		Token token;
+		token.col  = col_counter;
+		token.line = line_counter;
+
 		if (c == '"') {
 			token.type         = Token::StringLiteral;
 			std::size_t length = 0;
@@ -78,6 +91,7 @@ std::vector<Token> lex(std::string_view input)
 			token.content = std::string_view{ std::next(it), length };
 			result.push_back(token);
 			std::advance(it, 2 + length);
+			col_counter += static_cast<int>(2 + length);
 		}
 
 		else if (std::isdigit(c) != 0) {
@@ -95,6 +109,7 @@ std::vector<Token> lex(std::string_view input)
 			}
 			token.content = std::string_view{ it, length };
 			std::advance(it, length - 1);
+			col_counter += static_cast<int>(length - 1);
 			result.push_back(token);
 		}
 
@@ -105,15 +120,16 @@ std::vector<Token> lex(std::string_view input)
 				++length;
 			}
 			token.content = std::string_view{ it, length };
-			std::advance(it, length);
+			std::advance(it, length - 1);
+			col_counter += static_cast<int>(length);
 
 			for (const auto &[name, type] : token_names) {
 				if (token.content == name) {
 					token.type = type;
 				}
 			}
-
 			result.push_back(token);
+			continue;
 		}
 
 		else if (c == '/') {
@@ -122,7 +138,9 @@ std::vector<Token> lex(std::string_view input)
 				// We have a comment
 				while (it != input.end() && *it != '\n') {
 					std::advance(it, 1);
+					col_counter++;
 				}
+				line_counter++;
 				continue;
 			}
 		}
@@ -290,14 +308,14 @@ void eval_proc(const Procedure &proc, Environment &env)
 		}
 		case Token::Keyword_Do: {
 			if (env.stack.empty()) {
-				std::cerr << "Expected value on stack but empty\n";
+				std::cerr << fmt::format("{}:{} Expected value on stack but empty\n", token.line, token.col);
 				std::terminate();
 			}
 
 			const auto top = env.stack.back();
 			env.stack.erase(env.stack.end() - 1);
 			if (const bool *v = std::get_if<bool>(&top); v == nullptr) {
-				std::cerr << "Expected boolean value on stack\n";
+				std::cerr << fmt::format("{}:{} Expected boolean value on stack\n", token.line, token.col);
 				std::terminate();
 			} else if (!(*v)) {
 				ic = inst.forward_jump;
@@ -307,17 +325,17 @@ void eval_proc(const Procedure &proc, Environment &env)
 			break;
 		}
 		case Token::Keyword_End: {
-			const auto &do_inst     = proc.body.at(inst.backward_jump);
-			const auto &branch_inst = proc.body.at(do_inst.backward_jump);
+			const auto &branch_inst = proc.body.at(inst.backward_jump);
 
 			switch (branch_inst.corresponding_token.type) {
 			case Token::Keyword_If:
 				break;
 			case Token::Keyword_While:
-				ic = do_inst.backward_jump;
+				ic = inst.backward_jump;
 				break;
 			default:
-				std::cerr << "Unexpected branching instruction\n";
+				std::cerr << fmt::format("{}:{} Unexpected preceding branching instruction T:{}\n", token.line,
+										 token.col, branch_inst.corresponding_token.type);
 				std::terminate();
 				break;
 			}
@@ -329,7 +347,7 @@ void eval_proc(const Procedure &proc, Environment &env)
 			break;
 
 		default:
-			std::cerr << fmt::format("Unexpected token recieved {}\n", token.type);
+			std::cerr << fmt::format("{}:{} Unexpected token recieved {}\n", token.line, token.col, token.type);
 			std::terminate();
 			break;
 		}
@@ -341,7 +359,7 @@ int main()
 	constexpr std::string_view input{
 		R"(
 		proc main do
-		if true do "Hallo Welt" print end
+		true if do "Hallo Welt" print end
 		end
 		)"
 	};
@@ -350,7 +368,7 @@ int main()
 	const auto proc   = parse_procedure(tokens);
 
 	for (const auto &token : tokens) {
-		std::cout << token.type << " " << token.content << std::endl;
+		std::cout << fmt::format("{} {} {}:{}\n", static_cast<int>(token.type), token.content, token.line, token.col);
 	}
 
 	std::cout << fmt::format("Found procedure {}\n", proc.name);
