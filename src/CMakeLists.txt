@@ -1,4 +1,4 @@
-add_executable(north main.cpp lex.cpp parse.cpp eval.cpp)
+add_executable(north main.cpp lex.cpp parse.cpp eval.cpp eval_builtin.cpp)
 
 find_package(fmt REQUIRED)
 

@@ -5,6 +5,8 @@
 #include <fmt/format.h>
 #include <iostream>
 
+bool eval_builtin(std::string_view name, Environment &environ, const Token &token);
+
 namespace {
 
 template<class... Ts>
@@ -312,16 +314,7 @@ void eval_proc(const Procedure &proc, Environment &env)
 		case Token::Identifier: {
 			if (const auto *mproc = select_procedure(env.loaded_modules, token.content); mproc) {
 				eval_proc(*mproc, env);
-			} else if (token.content == "true") {
-				env.stack.emplace_back(true);
-			} else if (token.content == "false") {
-				env.stack.emplace_back(false);
-			} else if (token.content == "print") {
-				const auto &v = env.stack.back();
-				std::visit(overloaded{ [](const Identifier &a) { std::cout << "I:" << a.content << std::endl; },
-									   [](const auto &a) { std::cout << a << std::endl; } },
-						   v);
-				env.stack.erase(env.stack.end() - 1);
+			} else if (eval_builtin(token.content, env, token)) {
 			} else {
 				env.stack.emplace_back(Identifier{ token });
 			}
