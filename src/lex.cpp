@@ -86,7 +86,7 @@ std::vector<Token> lex(std::string_view input)
 		else if (std::isalpha(c) != 0) {
 			token.type         = Token::Identifier;
 			std::size_t length = 0;
-			for (auto sit = it; sit != input.end() && std::isalnum(*sit) != 0; ++sit) {
+			for (auto sit = it; sit != input.end() && std::isspace(*sit) == 0; ++sit) {
 				++length;
 			}
 			token.content = std::string_view{ it, length };

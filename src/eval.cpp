@@ -302,9 +302,15 @@ void eval_proc(const Procedure &proc, Environment &env)
 		const auto &token = inst.corresponding_token;
 		switch (token.type) {
 		case Token::Numeric: {
-			double value = 0.;
-			std::from_chars(token.content.data(), token.content.data() + token.content.size(), value);
-			env.stack.emplace_back(value);
+			if (token.content.find('.') != std::string_view::npos) {
+				double value = 0.;
+				std::from_chars(token.content.data(), token.content.data() + token.content.size(), value);
+				env.stack.emplace_back(value);
+			} else {
+				int value = 0.;
+				std::from_chars(token.content.data(), token.content.data() + token.content.size(), value);
+				env.stack.emplace_back(value);
+			}
 			break;
 		}
 		case Token::StringLiteral: {

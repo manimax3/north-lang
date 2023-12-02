@@ -9,7 +9,7 @@
 #include <vector>
 
 struct Identifier : Token {};
-using Value = std::variant<Identifier, std::string_view, double, int, char *, bool>;
+using Value = std::variant<Identifier, std::string_view, double, int, char *, bool, void*>;
 
 struct Environment {
 	std::unordered_map<std::string_view, Value> variables;

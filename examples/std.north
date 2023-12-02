@@ -5,3 +5,8 @@ end
 proc drop3 do
 	rotate drop
 end
+
+proc SEEK_SET do 0 end
+proc SEEK_CUR do 1 end
+proc SEEK_END do 2 end
+

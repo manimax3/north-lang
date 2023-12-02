@@ -23,13 +23,14 @@ int main(int argc, char **argv)
 
 	auto &mod = *modopt;
 
-	std::cout << fmt::format("Found procedures {}\n", mod->procedures.size());
-	const auto &proc = mod->procedures["main"];
-	for (std::size_t i = 0; i < proc.body.size(); ++i) {
-		const auto &inst = proc.body.at(i);
-		std::cout << fmt::format(" I {} Type: {} B: {} F: {}\n", i, inst.corresponding_token.content,
-								 inst.backward_jump, inst.forward_jump);
-	}
+	//
+	// std::cout << fmt::format("Found procedures {}\n", mod->procedures.size());
+	// const auto &proc = mod->procedures["main"];
+	// for (std::size_t i = 0; i < proc.body.size(); ++i) {
+	// 	const auto &inst = proc.body.at(i);
+	// 	std::cout << fmt::format(" I {} Type: {} B: {} F: {}\n", i, inst.corresponding_token.content,
+	// 							 inst.backward_jump, inst.forward_jump);
+	// }
 
 	Environment env{};
 

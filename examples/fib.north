@@ -3,7 +3,7 @@ proc main do
 	"std.north" import
 	0 1
 	i variable
-	20 i !
+	30 i !
 	while i ? 0 > do
 		over over + drop3 dup print
 		i ? 1 - i !
