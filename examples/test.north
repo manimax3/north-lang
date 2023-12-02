@@ -1,0 +1,8 @@
+proc main do
+hallo variable
+10 hallo !
+while hallo ? 0 > do
+	hallo ? print
+	hallo ? 1 - hallo !
+end
+end

@@ -1,0 +1,9 @@
+proc main do
+	0 1
+	i variable
+	20 i !
+	while i ? 0 > do
+		over over + dup print
+		i ? 1 - i !
+	end
+end

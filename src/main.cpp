@@ -3,24 +3,32 @@
 #include "parse.h"
 
 #include <fmt/format.h>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 
-int main()
+int main(int argc, char **argv)
 {
-	constexpr std::string_view input{
-		R"(
-		proc main do
-		hallo variable
-		10 hallo !
-		while hallo ? 0 > do
-			hallo ? print
-			hallo ? 1 - hallo !
-		end
-		end
-		)"
-	};
+	if (argc < 2) {
+		std::cerr << "No filename supplied: ./north <filename>\n";
+		return 1;
+	}
 
-	auto tokens = lex(input);
+	std::string buffer;
+	{
+		std::ifstream ifs;
+		ifs.open(argv[1], std::ios_base::in);
+		if (!ifs.is_open()) {
+			std::cerr << fmt::format("Could not open file {}\n", argv[1]);
+			return 1;
+		}
+
+		std::ostringstream oss;
+		oss << ifs.rdbuf();
+		buffer = oss.str();
+	}
+
+	auto tokens = lex(buffer);
 
 	for (const auto &token : tokens) {
 		std::cout << fmt::format("{} {} {}:{}\n", static_cast<int>(token.type), token.content, token.line, token.col);
