@@ -22,6 +22,12 @@ constexpr inline std::array<std::pair<std::string_view, Token::TokenType>, Token
 	std::pair{ "/", Token::Op_Div },
 	std::pair{ "!", Token::Op_Store },
 	std::pair{ "?", Token::Op_Load },
+	std::pair{ "<", Token::Op_LT },
+	std::pair{ "<=", Token::Op_LE },
+	std::pair{ ">=", Token::Op_GE },
+	std::pair{ ">", Token::Op_GT },
+	std::pair{ "==", Token::Op_EQ },
+	std::pair{ "!=", Token::Op_NE },
 };
 
 std::vector<Token> lex(std::string_view input)
@@ -107,11 +113,21 @@ std::vector<Token> lex(std::string_view input)
 			}
 		}
 
-		for (const auto &[name, type] : token_names) {
-			if (name == std::string_view{ it, 1 }) {
-				token.type    = type;
-				token.content = { it, 1 };
-				result.push_back(token);
+		else if (std::isspace(c) == 0) {
+			std::size_t length = 0;
+			for (auto sit = it; sit != input.end() && (std::isspace(*sit) == 0); ++sit) {
+				++length;
+			}
+			token.content = std::string_view{ it, length };
+
+			for (const auto &[name, type] : token_names) {
+				if (token.content == name) {
+					token.type = type;
+					result.push_back(token);
+					std::advance(it, length - 1);
+					col_counter += static_cast<int>(length);
+					break;
+				}
 			}
 		}
 	}

@@ -19,14 +19,20 @@ struct Token {
 		Keyword_End,
 		Keyword_Variable,
 		Keyword_Over,
-		Op_Begin_,
+
 		Op_Add,
 		Op_Sub,
 		Op_Mul,
 		Op_Div,
 		Op_Store,
 		Op_Load,
-		Op_End_,
+		Op_LT,
+		Op_LE,
+		Op_GE,
+		Op_GT,
+		Op_EQ,
+		Op_NE,
+
 		Count
 	};
 
