@@ -278,6 +278,19 @@ bool eval_ops(const Token &token, Environment &env)
 	}
 	return true;
 }
+
+const Procedure *select_procedure(std::span<Module> modules, std::string_view name)
+{
+	for (auto it = modules.rbegin(); it != modules.rend(); ++it) {
+		const auto procIt = (*it)->procedures.find(name);
+		if (procIt != (*it)->procedures.end()) {
+			return std::addressof(procIt->second);
+		}
+	}
+
+	return nullptr;
+}
+
 }
 
 void eval_proc(const Procedure &proc, Environment &env)
@@ -297,8 +310,8 @@ void eval_proc(const Procedure &proc, Environment &env)
 			break;
 		}
 		case Token::Identifier: {
-			if (env.procedures.contains(token.content)) {
-				eval_proc(env.procedures[token.content], env);
+			if (const auto *mproc = select_procedure(env.loaded_modules, token.content); mproc) {
+				eval_proc(*mproc, env);
 			} else if (token.content == "true") {
 				env.stack.emplace_back(true);
 			} else if (token.content == "false") {
@@ -375,6 +388,49 @@ void eval_proc(const Procedure &proc, Environment &env)
 			}
 			env.stack.push_back(*(env.stack.end() - 2));
 			break;
+		case Token::Keyword_Rotate:
+			if (env.stack.size() < 3) {
+				std::cerr << fmt::format("{}:{} Expected atleasat two elements on the stack\n", token.line, token.col);
+				std::terminate();
+			}
+			std::swap(*(env.stack.end() - 3), *(env.stack.end() - 1));
+			std::swap(*(env.stack.end() - 1), *(env.stack.end() - 2));
+			break;
+		case Token::Keyword_Import: {
+			if (env.stack.empty()) {
+				std::cerr << fmt::format("{}:{} Expected atleasat two elements on the stack\n", token.line, token.col);
+				std::terminate();
+			}
+
+			const auto file_value = env.stack.back();
+			env.stack.pop_back();
+
+			if (!std::holds_alternative<std::string_view>(file_value)) {
+				std::cerr << fmt::format("{}:{} Expected string literal with filename\n", token.line, token.col);
+				std::terminate();
+			}
+
+			const auto &filename = std::get<std::string_view>(file_value);
+
+			bool foundMod = false;
+			for (const auto &sp : env.search_paths) {
+				auto mod = load_file(fmt::format("{}/{}", sp, filename));
+				if (!mod.has_value()) {
+					continue;
+				}
+
+				env.loaded_modules.emplace_back(std::move(*mod));
+				foundMod = true;
+				break;
+			}
+
+			if (!foundMod) {
+				std::cerr << fmt::format("{}:{} Failed to load module {}\n", token.line, token.col, filename);
+				std::terminate();
+			}
+
+			break;
+		}
 		case Token::Keyword_Swap:
 			if (env.stack.size() < 2) {
 				std::cerr << fmt::format("{}:{} Expected atleasat two elements on the stack\n", token.line, token.col);

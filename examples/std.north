@@ -1,0 +1,7 @@
+proc drop2 do
+	swap drop
+end
+
+proc drop3 do
+	rotate drop
+end

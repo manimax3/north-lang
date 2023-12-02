@@ -2,8 +2,12 @@
 
 #include "lex.h"
 
-#include <variant>
+#include <memory>
+#include <optional>
 #include <span>
+#include <string>
+#include <unordered_map>
+#include <variant>
 
 struct Instruction {
 	Token       corresponding_token;
@@ -16,4 +20,17 @@ struct Procedure {
 	std::vector<Instruction> body;
 };
 
-Procedure parse_procedure(std::span<Token> input);
+struct ModuleData {
+	std::string                                     filename;
+	std::string                                     buffer;
+	std::unordered_map<std::string_view, Procedure> procedures;
+};
+
+using Module = std::unique_ptr<ModuleData>;
+inline Module new_module()
+{
+	return std::make_unique<ModuleData>();
+}
+
+Procedure             parse_procedure(std::span<Token> input, std::size_t *unconsomed_tokens = nullptr);
+std::optional<Module> load_file(std::string_view filename);

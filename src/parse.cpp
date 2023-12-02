@@ -2,8 +2,10 @@
 
 #include <exception>
 #include <fmt/format.h>
+#include <fstream>
 #include <iostream>
 #include <span>
+#include <sstream>
 #include <stack>
 
 Token expect(std::span<Token> &input, Token::TokenType type)
@@ -24,7 +26,37 @@ Token expect(std::span<Token> &input, Token::TokenType type)
 	return token;
 }
 
-Procedure parse_procedure(std::span<Token> input)
+std::optional<Module> load_file(std::string_view filename)
+{
+	auto module      = new_module();
+	module->filename = filename;
+	{
+		std::ifstream ifs;
+		ifs.open(module->filename, std::ios_base::in);
+		if (!ifs.is_open()) {
+			std::cerr << fmt::format("Could not open file {}\n", filename);
+			return std::nullopt;
+		}
+
+		std::ostringstream oss;
+		oss << ifs.rdbuf();
+		module->buffer = oss.str();
+	}
+
+	auto        tokens           = lex(module->buffer);
+	std::size_t remaining_tokens = tokens.size();
+	std::span   token_view       = tokens;
+
+	while (remaining_tokens > 0) {
+		token_view                    = token_view.last(remaining_tokens);
+		auto proc                     = parse_procedure(token_view, &remaining_tokens);
+		module->procedures[proc.name] = std::move(proc);
+	}
+
+	return module;
+}
+
+Procedure parse_procedure(std::span<Token> input, std::size_t *unconsomed_tokens)
 {
 	Procedure proc;
 
@@ -94,6 +126,10 @@ Procedure parse_procedure(std::span<Token> input)
 	}
 
 	expect(input, Token::Keyword_End);
+
+	if (unconsomed_tokens) {
+		*unconsomed_tokens = input.size();
+	}
 
 	return proc;
 }

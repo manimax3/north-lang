@@ -19,6 +19,8 @@ struct Token {
 		Keyword_End,
 		Keyword_Variable,
 		Keyword_Over,
+		Keyword_Rotate,
+		Keyword_Import,
 
 		Op_Add,
 		Op_Sub,

@@ -5,16 +5,17 @@
 
 #include <string_view>
 #include <unordered_map>
-#include <vector>
 #include <variant>
+#include <vector>
 
 struct Identifier : Token {};
 using Value = std::variant<Identifier, std::string_view, double, int, char *, bool>;
 
 struct Environment {
-	std::unordered_map<std::string_view, Procedure> procedures;
-	std::unordered_map<std::string_view, Value>     variables;
-	std::vector<Value>                              stack;
+	std::unordered_map<std::string_view, Value> variables;
+	std::vector<Value>                          stack;
+	std::vector<Module>                         loaded_modules;
+	std::vector<std::string>                    search_paths;
 };
 
 void eval_proc(const Procedure &proc, Environment &env);
