@@ -35,6 +35,13 @@ struct Token {
 		Op_EQ,
 		Op_NE,
 
+		Op_LS,
+		Op_RS,
+		Op_BitAnd,
+		Op_BitOr,
+		Op_BitNot,
+		Op_BitXor,
+
 		Count
 	};
 

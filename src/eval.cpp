@@ -240,41 +240,148 @@ bool eval_ops(const Token &token, Environment &env)
 		const auto value = env.stack.back();
 		env.stack.pop_back();
 
-		if (!std::holds_alternative<Identifier>(variable)) {
+		if (std::holds_alternative<Identifier>(variable)) {
+			const auto &ident  = std::get<Identifier>(variable);
+			auto        cellIt = env.variables.find(ident.content);
+			if (cellIt == env.variables.end()) {
+				std::cerr << fmt::format("{}:{} Tried to store undeclared variable\n", token.line, token.col);
+				std::terminate();
+			}
+			cellIt->second = value;
+		} else if (std::holds_alternative<char *>(variable)) {
+			char *ptr = std::get<char *>(variable);
+			std::visit(overloaded{ [&](const int &ivalue) { *ptr = static_cast<char>(ivalue & 0xFF); },
+								   [&](const std::string_view &str) { std::memcpy(ptr, str.data(), str.size()); },
+
+								   [&](const auto &) {
+									   std::cerr << fmt::format("{}:{} Tried to store incompatible type {} to memory\n",
+																token.line, token.col, value.index());
+									   std::terminate();
+								   } },
+					   value);
+		} else {
 			std::cerr << fmt::format("{}:{} Tried to store in non variable type {}\n", token.line, token.col,
 									 variable.index());
 			std::terminate();
 		}
-
-		const auto &ident = std::get<Identifier>(variable);
-
-		auto cellIt = env.variables.find(ident.content);
-		if (cellIt == env.variables.end()) {
-			std::cerr << fmt::format("{}:{} Tried to store undeclared variable\n", token.line, token.col);
-			std::terminate();
-		}
-		cellIt->second = value;
-
 	} break;
 	case Token::Op_Load: {
 		expect_stack_size(token, env, 1);
 		const auto variable = env.stack.back();
 		env.stack.pop_back();
 
-		if (!std::holds_alternative<Identifier>(variable)) {
+		if (std::holds_alternative<Identifier>(variable)) {
+			const auto &ident = std::get<Identifier>(variable);
+
+			auto cellIt = env.variables.find(ident.content);
+			if (cellIt == env.variables.end()) {
+				std::cerr << fmt::format("{}:{} Tried to load undeclared variable\n", token.line, token.col);
+				std::terminate();
+			}
+			env.stack.push_back(cellIt->second);
+		} else if (std::holds_alternative<char *>(variable)) {
+			const auto *ptr = std::get<char *>(variable);
+			env.stack.emplace_back(static_cast<int>(*ptr));
+		} else {
 			std::cerr << fmt::format("{}:{} Tried to store in non variable type\n", token.line, token.col);
 			std::terminate();
 		}
-
-		const auto &ident = std::get<Identifier>(variable);
-
-		auto cellIt = env.variables.find(ident.content);
-		if (cellIt == env.variables.end()) {
-			std::cerr << fmt::format("{}:{} Tried to load undeclared variable\n", token.line, token.col);
-			std::terminate();
-		}
-		env.stack.push_back(cellIt->second);
 	} break;
+	case Token::Op_LS: {
+		expect_stack_size(token, env, 2);
+		const auto second = env.stack.back();
+		env.stack.pop_back();
+		const auto first = env.stack.back();
+		env.stack.pop_back();
+
+		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a << b); },
+							   [&](const auto &, const auto &) {
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
+															token.col);
+								   std::terminate();
+							   } },
+				   first, second);
+
+	} break;
+	case Token::Op_RS: {
+		expect_stack_size(token, env, 2);
+		const auto second = env.stack.back();
+		env.stack.pop_back();
+		const auto first = env.stack.back();
+		env.stack.pop_back();
+
+		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a >> b); },
+							   [&](const auto &, const auto &) {
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
+															token.col);
+								   std::terminate();
+							   } },
+				   first, second);
+
+	} break;
+	case Token::Op_BitOr: {
+		expect_stack_size(token, env, 2);
+		const auto second = env.stack.back();
+		env.stack.pop_back();
+		const auto first = env.stack.back();
+		env.stack.pop_back();
+
+		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a | b); },
+							   [&](const auto &, const auto &) {
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
+															token.col);
+								   std::terminate();
+							   } },
+				   first, second);
+
+	} break;
+	case Token::Op_BitAnd: {
+		expect_stack_size(token, env, 2);
+		const auto second = env.stack.back();
+		env.stack.pop_back();
+		const auto first = env.stack.back();
+		env.stack.pop_back();
+
+		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a & b); },
+							   [&](const auto &, const auto &) {
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
+															token.col);
+								   std::terminate();
+							   } },
+				   first, second);
+
+	} break;
+	case Token::Op_BitXor: {
+		expect_stack_size(token, env, 2);
+		const auto second = env.stack.back();
+		env.stack.pop_back();
+		const auto first = env.stack.back();
+		env.stack.pop_back();
+
+		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a ^ b); },
+							   [&](const auto &, const auto &) {
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
+															token.col);
+								   std::terminate();
+							   } },
+				   first, second);
+
+	} break;
+	case Token::Op_BitNot: {
+		expect_stack_size(token, env, 1);
+		const auto first = env.stack.back();
+		env.stack.pop_back();
+
+		std::visit(overloaded{ [&](const int &a) { env.stack.emplace_back(~a); },
+							   [&](const auto &) {
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
+															token.col);
+								   std::terminate();
+							   } },
+				   first);
+
+	} break;
+
 	default:
 		return false;
 	}
@@ -292,7 +399,6 @@ const Procedure *select_procedure(std::span<Module> modules, std::string_view na
 
 	return nullptr;
 }
-
 }
 
 void eval_proc(const Procedure &proc, Environment &env)

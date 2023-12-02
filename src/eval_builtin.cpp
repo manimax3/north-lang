@@ -181,6 +181,19 @@ void eval_fwrite(Environment &env, const Token &token)
 	env.stack.emplace_back(static_cast<int>(result)); // TODOMAX use int64
 }
 
+void eval_alloc(Environment &env, const Token &token)
+{
+	const auto size   = get_from_stack<int>(env, token);
+	auto      *result = malloc(static_cast<std::size_t>(size));
+	env.stack.emplace_back(static_cast<char *>(result)); // TODOMAX use int64
+}
+
+void eval_dealloc(Environment &env, const Token &token)
+{
+	auto *ptr = get_from_stack<char *>(env, token);
+	free(ptr);
+}
+
 constexpr inline std::array builtins{
 	BuiltinItem{ "print", 1, eval_print },
 	BuiltinItem{ "true", 0, +[](Environment &env, const Token &) { env.stack.emplace_back(true); } },
@@ -195,6 +208,8 @@ constexpr inline std::array builtins{
 	BuiltinItem{ "ftell", 1, eval_ftell },
 	BuiltinItem{ "fread", 4, eval_fread },
 	BuiltinItem{ "fwrite", 4, eval_fwrite },
+	BuiltinItem{ "alloc", 1, eval_alloc },
+	BuiltinItem{ "dealloc", 1, eval_dealloc },
 };
 
 }

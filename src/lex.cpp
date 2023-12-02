@@ -30,6 +30,12 @@ constexpr inline std::array<std::pair<std::string_view, Token::TokenType>, Token
 	std::pair{ ">", Token::Op_GT },
 	std::pair{ "==", Token::Op_EQ },
 	std::pair{ "!=", Token::Op_NE },
+	std::pair{ "<<", Token::Op_LS },
+	std::pair{ ">>", Token::Op_RS },
+	std::pair{ "&", Token::Op_BitAnd },
+	std::pair{ "|", Token::Op_BitOr },
+	std::pair{ "~", Token::Op_BitNot },
+	std::pair{ "^", Token::Op_BitXor },
 };
 
 std::vector<Token> lex(std::string_view input)
