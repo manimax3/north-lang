@@ -26,7 +26,6 @@ struct Token {
 		Keyword_End,
 		Keyword_Variable,
 		Keyword_Over,
-		Keyword_Return,
 		Op_Begin_,
 		Op_Add,
 		Op_Sub,
@@ -207,10 +206,7 @@ Procedure parse_procedure(std::span<Token> input)
 		const auto inst_idx      = size(proc.body) - 1;
 
 		switch (token.type) {
-		case Token::Keyword_While: {
-			jump_stack.push(inst_idx);
-			break;
-		}
+		case Token::Keyword_While:
 		case Token::Keyword_If: {
 			jump_stack.push(inst_idx);
 			break;
@@ -346,6 +342,35 @@ void eval_proc(const Procedure &proc, Environment &env)
 		case Token::Keyword_If:
 			break;
 
+		case Token::Keyword_Dup:
+			if (env.stack.empty()) {
+				std::cerr << fmt::format("{}:{} Expected value on stack but empty\n", token.line, token.col);
+				std::terminate();
+			}
+			env.stack.push_back(env.stack.back());
+			break;
+		case Token::Keyword_Drop:
+			if (env.stack.empty()) {
+				std::cerr << fmt::format("{}:{} Expected value on stack but empty\n", token.line, token.col);
+				std::terminate();
+			}
+			env.stack.erase(env.stack.end() - 1);
+			break;
+		case Token::Keyword_Over:
+			if (env.stack.size() < 2) {
+				std::cerr << fmt::format("{}:{} Expected atleasat two elements on the stack\n", token.line, token.col);
+				std::terminate();
+			}
+			env.stack.push_back(*(env.stack.end() - 2));
+			break;
+		case Token::Keyword_Swap:
+			if (env.stack.size() < 2) {
+				std::cerr << fmt::format("{}:{} Expected atleasat two elements on the stack\n", token.line, token.col);
+				std::terminate();
+			}
+			std::swap(*(env.stack.end() - 1), *(env.stack.end() - 2));
+			break;
+
 		default:
 			std::cerr << fmt::format("{}:{} Unexpected token recieved {}\n", token.line, token.col, token.type);
 			std::terminate();
@@ -359,7 +384,7 @@ int main()
 	constexpr std::string_view input{
 		R"(
 		proc main do
-		true if do "Hallo Welt" print end
+		true false swap dup if drop do "Hallo Welt" print end
 		end
 		)"
 	};
