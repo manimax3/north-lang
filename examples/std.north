@@ -25,3 +25,45 @@ proc read_file do
 	file ? fclose
 	buffer ? filesize ? // Leave buffer and filesize on top of the stack
 end
+
+proc parse_number do
+	length dup variable !
+	buffer dup variable !
+	0 result dup variable !
+
+	0 index dup variable !
+	0 count dup variable !
+
+	while index ? length ? < do
+		buffer ? index ? + ?
+		index ? 1 + index !
+		if  dup "0" 0 string_view_get >=
+			over "9" 0 string_view_get <=
+			  and do
+			count ? 1 + count !
+			"0" 0 string_view_get -
+		else
+			drop
+			index ? length ? + index !
+		end
+	end
+
+	if count ? 0 == do
+	 0 1 -
+	 return
+	end
+
+	0 index !
+
+	while index ? count ? < do
+		0 while dup index ? < do
+			swap 10 *
+			swap 1 +
+		end
+		drop
+		index ? 1 + index !
+		result ? + result !
+	end
+	
+	result ?
+end
