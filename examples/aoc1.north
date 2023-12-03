@@ -1,0 +1,163 @@
+proc check_numeric_string do
+	// Args Buffer, length Return int
+	length dup variable !
+	buffer dup variable !
+
+	0 1 - result dup variable !
+
+	"one" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 1 result ! end end drop
+	"two" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 2 result ! end end drop
+	"three" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 3 result ! end end drop
+	"four" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 4 result ! end end drop
+	"five" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 5 result ! end end drop
+	"six" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 6 result ! end end drop
+	"seven" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 7 result ! end end drop
+	"eight" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 8 result ! end end drop
+	"nine" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 9 result ! end end drop
+	"zero" if dup string_view_length length ? < do if buffer ? over string_view_length as_string_view over == do 0 result ! end end drop
+
+	result ?
+end
+
+proc part1 do
+	data variable
+	size variable
+	read_file size ! data !
+
+	newline variable
+	10 newline ! // Store the ascii for new line
+
+	zero variable
+	"0" 0 string_view_get zero !
+
+	nine variable
+	"9" 0 string_view_get nine !
+
+	first variable
+	last variable
+	sum variable
+	0 first !
+	0 last !
+	0 sum !
+
+	index variable
+	0 index !
+
+	while index ? size ? < do
+		// Put the current char on the stack
+		data ? index ? + ?
+
+		if dup zero ? >= over nine ? <= and do
+			// We have found a number
+			if first ? 0 == do
+				dup first !
+			end
+			dup last !
+		end
+
+		if dup newline ? == do
+
+			if first ? 0 > do
+				first ? zero ? - 10 *
+				sum ? + sum !
+			end
+
+			if last ? 0 > do
+				last ? zero ? -
+				sum ? + sum !
+			end
+
+			0 first !
+			0 last !
+		end
+		drop
+		index ? 1 + index !
+	end
+
+	"Part 1 sum is" print
+	sum ? print
+
+	data ? dealloc
+end
+
+proc part2 do
+	data variable
+	size variable
+	read_file size ! data !
+
+	newline variable
+	10 newline ! // Store the ascii for new line
+
+	zero variable
+	"0" 0 string_view_get zero !
+
+	nine variable
+	"9" 0 string_view_get nine !
+
+	first variable
+	last variable
+	sum variable
+	0 first !
+	0 last !
+	0 sum !
+
+	index variable
+	0 index !
+
+	while index ? size ? < do
+		// Put the current char on the stack
+		data ? index ? + ?
+
+		if dup zero ? >= over nine ? <= and do
+			// We have found a number
+			if first ? 0 == do
+				dup first !
+			end
+			dup last !
+		end
+
+		// Check for start of a matching string
+		data ? index ? + size ? index ? - check_numeric_string
+		if dup 0 >= do
+			dup zero ? +
+			// We have found a number
+			if first ? 0 == do
+				dup first !
+			end
+			dup last !
+		end
+		drop
+
+		if dup newline ? == do
+
+			// first ? zero ? - print
+			// last ? zero ? - print
+
+			if first ? 0 > do
+				first ? zero ? - 10 *
+				sum ? + sum !
+			end
+
+			if last ? 0 > do
+				last ? zero ? -
+				sum ? + sum !
+			end
+
+			0 first !
+			0 last !
+		end
+		drop
+		index ? 1 + index !
+	end
+
+	"Part 2 sum is" print
+	sum ? print
+
+	data ? dealloc
+end
+
+proc main do
+	"std.north" import
+	"examples/input1.txt" part1
+	"examples/input1.txt" part2
+end
