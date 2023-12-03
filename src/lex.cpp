@@ -12,12 +12,14 @@ constexpr inline std::array<std::pair<std::string_view, Token::TokenType>, Token
 	std::pair{ "do", Token::Keyword_Do },
 	std::pair{ "while", Token::Keyword_While },
 	std::pair{ "if", Token::Keyword_If },
+	std::pair{ "else", Token::Keyword_Else },
 	std::pair{ "proc", Token::Keyword_Proc },
 	std::pair{ "end", Token::Keyword_End },
 	std::pair{ "variable", Token::Keyword_Variable },
 	std::pair{ "over", Token::Keyword_Over },
 	std::pair{ "rotate", Token::Keyword_Rotate },
 	std::pair{ "import", Token::Keyword_Import },
+	std::pair{ "return", Token::Keyword_Return },
 	std::pair{ "+", Token::Op_Add },
 	std::pair{ "-", Token::Op_Sub },
 	std::pair{ "*", Token::Op_Mul },
@@ -138,6 +140,7 @@ std::vector<Token> lex(std::string_view input)
 				}
 			}
 		}
+		col_counter++;
 	}
 
 	return result;

@@ -82,6 +82,27 @@ Procedure parse_procedure(std::span<Token> input, std::size_t *unconsomed_tokens
 			jump_stack.push(inst_idx);
 			break;
 		}
+		case Token::Keyword_Else: {
+			if (jump_stack.empty()) {
+				std::cerr << "Expected if instruction preceding else instruction\n";
+				std::terminate();
+			}
+
+			auto       &do_inst     = proc.body[jump_stack.top()];
+			const auto &branch_inst = proc.body[do_inst.backward_jump];
+
+			if (branch_inst.corresponding_token.type != Token::Keyword_If) {
+				std::cerr << "Expected if instruction preceding else instruction\n";
+				std::terminate();
+			}
+
+			do_inst.forward_jump = inst_idx;
+			inst.backward_jump   = jump_stack.top();
+			jump_stack.pop();
+			jump_stack.push(inst_idx);
+
+			break;
+		}
 		case Token::Keyword_Do: {
 			if (jump_stack.empty()) {
 				std::cerr << "Expected branching instruction preceding do instruction\n";
@@ -98,17 +119,18 @@ Procedure parse_procedure(std::span<Token> input, std::size_t *unconsomed_tokens
 		}
 		case Token::Keyword_End: {
 			if (jump_stack.empty()) {
-				std::cerr << "Expected do instruction preceding end instruction\n";
+				std::cerr << "Expected do or else instruction preceding end instruction\n";
 				std::terminate();
 			}
 
-			auto &branch_inst = proc.body[jump_stack.top()];
-			if (branch_inst.corresponding_token.type != Token::Keyword_Do) {
-				std::cerr << "Expected do token before end token\n";
+			auto      &branch_inst = proc.body[jump_stack.top()];
+			const auto branch_type = branch_inst.corresponding_token.type;
+			if (branch_type != Token::Keyword_Do && branch_type != Token::Keyword_Else) {
+				std::cerr << "Expected do or else token before end token\n";
 				std::terminate();
 			}
 			branch_inst.forward_jump = inst_idx;
-			inst.backward_jump       = branch_inst.backward_jump;
+			inst.backward_jump       = branch_type == Token::Keyword_Do ? branch_inst.backward_jump : jump_stack.top();
 
 			jump_stack.pop();
 			break;

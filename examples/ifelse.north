@@ -1,0 +1,12 @@
+proc main do
+	true test dup variable !
+	if false do
+		"Hallo" print
+	else if test ? do
+		"Welt" print
+	else 
+		"nothing" print
+	end
+	end
+	"dafaf" print
+end

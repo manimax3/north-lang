@@ -453,11 +453,16 @@ void eval_proc(const Procedure &proc, Environment &env)
 
 			break;
 		}
+		case Token::Keyword_Else:
+			ic = inst.forward_jump;
+			continue;
+			break;
 		case Token::Keyword_End: {
 			const auto &branch_inst = proc.body.at(inst.backward_jump);
 
 			switch (branch_inst.corresponding_token.type) {
 			case Token::Keyword_If:
+			case Token::Keyword_Else:
 				break;
 			case Token::Keyword_While:
 				ic = inst.backward_jump;
