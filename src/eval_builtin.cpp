@@ -194,6 +194,13 @@ void eval_dealloc(Environment &env, const Token &token)
 	free(ptr);
 }
 
+void eval_as_string_view(Environment &env, const Token &token)
+{
+	const auto size   = get_from_stack<int>(env, token);
+	auto      *buffer = get_from_stack<char *>(env, token);
+	env.stack.emplace_back(std::string_view{ buffer, static_cast<std::size_t>(size) });
+}
+
 constexpr inline std::array builtins{
 	BuiltinItem{ "print", 1, eval_print },
 	BuiltinItem{ "true", 0, +[](Environment &env, const Token &) { env.stack.emplace_back(true); } },
@@ -210,6 +217,7 @@ constexpr inline std::array builtins{
 	BuiltinItem{ "fwrite", 4, eval_fwrite },
 	BuiltinItem{ "alloc", 1, eval_alloc },
 	BuiltinItem{ "dealloc", 1, eval_dealloc },
+	BuiltinItem{ "as_string_view", 2, eval_as_string_view },
 };
 
 }

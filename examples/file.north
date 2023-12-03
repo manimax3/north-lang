@@ -1,0 +1,11 @@
+proc main do
+	"std.north" import
+
+	buffer variable
+	buffer_size variable
+	"examples/test.txt" read_file buffer_size ! buffer !
+
+	buffer ? buffer_size ? as_string_view print
+
+	buffer ? dealloc
+end

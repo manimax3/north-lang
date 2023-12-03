@@ -10,3 +10,18 @@ proc SEEK_SET do 0 end
 proc SEEK_CUR do 1 end
 proc SEEK_END do 2 end
 
+proc read_file do
+	filename variable filename ! // Store top argument inside filename
+	file variable
+	filesize variable
+	filename ? "r" fopen file !
+	file ? 0 SEEK_END fseek drop
+	file ? ftell filesize !
+	file ? 0 SEEK_SET fseek drop
+
+	buffer variable
+	filesize ? alloc dup buffer !
+	1 filesize ? file ? fread drop
+	file ? fclose
+	buffer ? filesize ? // Leave buffer and filesize on top of the stack
+end
