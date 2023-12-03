@@ -4,6 +4,7 @@ proc main do
 		"Hallo" print
 	else if test ? do
 		"Welt" print
+		return
 	else 
 		"nothing" print
 	end

@@ -476,6 +476,8 @@ void eval_proc(const Procedure &proc, Environment &env)
 
 			break;
 		}
+		case Token::Keyword_Return:
+			return;
 		case Token::Keyword_While:
 		case Token::Keyword_If:
 			break;
