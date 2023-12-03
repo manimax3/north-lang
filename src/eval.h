@@ -9,13 +9,12 @@
 #include <vector>
 
 struct Identifier : Token {};
-using Value = std::variant<Identifier, std::string_view, double, int, char *, bool, void*>;
+using Value = std::variant<Identifier, std::string_view, double, int, char *, bool, void *>;
 
 struct Environment {
-	std::unordered_map<std::string_view, Value> variables;
-	std::vector<Value>                          stack;
-	std::vector<Module>                         loaded_modules;
-	std::vector<std::string>                    search_paths;
+	std::vector<Value>       stack;
+	std::vector<Module>      loaded_modules;
+	std::vector<std::string> search_paths;
 };
 
 void eval_proc(const Procedure &proc, Environment &env);

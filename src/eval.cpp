@@ -7,6 +7,8 @@
 
 bool eval_builtin(std::string_view name, Environment &environ, const Token &token);
 
+using VariablesMap = std::unordered_map<std::string_view, Value>;
+
 namespace {
 
 template<class... Ts>
@@ -38,7 +40,7 @@ bool check_permissible_types(const Value &value, const Token &token, bool fail =
 	return passes;
 }
 
-bool eval_ops(const Token &token, Environment &env)
+bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 {
 	switch (token.type) {
 	case Token::Op_Add: {
@@ -242,8 +244,8 @@ bool eval_ops(const Token &token, Environment &env)
 
 		if (std::holds_alternative<Identifier>(variable)) {
 			const auto &ident  = std::get<Identifier>(variable);
-			auto        cellIt = env.variables.find(ident.content);
-			if (cellIt == env.variables.end()) {
+			auto        cellIt = variables.find(ident.content);
+			if (cellIt == variables.end()) {
 				std::cerr << fmt::format("{}:{} Tried to store undeclared variable\n", token.line, token.col);
 				std::terminate();
 			}
@@ -273,8 +275,8 @@ bool eval_ops(const Token &token, Environment &env)
 		if (std::holds_alternative<Identifier>(variable)) {
 			const auto &ident = std::get<Identifier>(variable);
 
-			auto cellIt = env.variables.find(ident.content);
-			if (cellIt == env.variables.end()) {
+			auto cellIt = variables.find(ident.content);
+			if (cellIt == variables.end()) {
 				std::cerr << fmt::format("{}:{} Tried to load undeclared variable\n", token.line, token.col);
 				std::terminate();
 			}
@@ -403,6 +405,7 @@ const Procedure *select_procedure(std::span<Module> modules, std::string_view na
 
 void eval_proc(const Procedure &proc, Environment &env)
 {
+	VariablesMap variables;
 	for (std::size_t ic = 0; ic < proc.body.size(); ++ic) {
 		const auto &inst  = proc.body.at(ic);
 		const auto &token = inst.corresponding_token;
@@ -557,14 +560,14 @@ void eval_proc(const Procedure &proc, Environment &env)
 				std::terminate();
 			}
 
-			const auto &ident            = std::get<Identifier>(variable);
-			env.variables[ident.content] = true;
+			const auto &ident        = std::get<Identifier>(variable);
+			variables[ident.content] = true;
 
 			break;
 		}
 
 		default:
-			if (!eval_ops(token, env)) {
+			if (!eval_ops(token, env, variables)) {
 				std::cerr << fmt::format("{}:{} Unexpected token recieved {}\n", token.line, token.col, token.type);
 				std::terminate();
 			}
