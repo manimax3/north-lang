@@ -54,10 +54,10 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 							   [&](const int &a, const int &b) { env.stack.emplace_back(a + b); },
 							   [&](const double &a, const int &b) { env.stack.emplace_back(a + b); },
 							   [&](const int &a, const double &b) { env.stack.emplace_back(a + b); },
-							   [&](const char *a, const int &b) { env.stack.emplace_back(a + b); },
+							   [&](char *a, const int &b) { env.stack.emplace_back(a + b); },
 							   [&](const auto &, const auto &) {
-								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
-															token.col);
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
+															token.line, token.col, token.type);
 								   std::terminate();
 							   } },
 				   first, second);
@@ -74,10 +74,10 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 							   [&](const int &a, const int &b) { env.stack.emplace_back(a - b); },
 							   [&](const double &a, const int &b) { env.stack.emplace_back(a - b); },
 							   [&](const int &a, const double &b) { env.stack.emplace_back(a - b); },
-							   [&](const char *a, const int &b) { env.stack.emplace_back(a - b); },
+							   [&](char *a, const int &b) { env.stack.emplace_back(a - b); },
 							   [&](const auto &, const auto &) {
-								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
-															token.col);
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
+															token.line, token.col, token.type);
 								   std::terminate();
 							   } },
 				   first, second);
@@ -95,8 +95,8 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 							   [&](const double &a, const int &b) { env.stack.emplace_back(a * b); },
 							   [&](const int &a, const double &b) { env.stack.emplace_back(a * b); },
 							   [&](const auto &, const auto &) {
-								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
-															token.col);
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
+															token.line, token.col, token.type);
 								   std::terminate();
 							   } },
 				   first, second);
@@ -114,8 +114,8 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 							   [&](const double &a, const int &b) { env.stack.emplace_back(a / b); },
 							   [&](const int &a, const double &b) { env.stack.emplace_back(a / b); },
 							   [&](const auto &, const auto &) {
-								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
-															token.col);
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
+															token.line, token.col, token.type);
 								   std::terminate();
 							   } },
 				   first, second);
@@ -133,8 +133,8 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 							   [&](const double &a, const int &b) { env.stack.emplace_back(a < b); },
 							   [&](const int &a, const double &b) { env.stack.emplace_back(a < b); },
 							   [&](const auto &, const auto &) {
-								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
-															token.col);
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
+															token.line, token.col, token.type);
 								   std::terminate();
 							   } },
 				   first, second);
@@ -152,8 +152,8 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 							   [&](const double &a, const int &b) { env.stack.emplace_back(a <= b); },
 							   [&](const int &a, const double &b) { env.stack.emplace_back(a <= b); },
 							   [&](const auto &, const auto &) {
-								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
-															token.col);
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
+															token.line, token.col, token.type);
 								   std::terminate();
 							   } },
 				   first, second);
@@ -171,8 +171,8 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 							   [&](const double &a, const int &b) { env.stack.emplace_back(a >= b); },
 							   [&](const int &a, const double &b) { env.stack.emplace_back(a >= b); },
 							   [&](const auto &, const auto &) {
-								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
-															token.col);
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
+															token.line, token.col, token.type);
 								   std::terminate();
 							   } },
 				   first, second);
@@ -190,8 +190,8 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 							   [&](const double &a, const int &b) { env.stack.emplace_back(a > b); },
 							   [&](const int &a, const double &b) { env.stack.emplace_back(a > b); },
 							   [&](const auto &, const auto &) {
-								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
-															token.col);
+								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
+															token.line, token.col, token.type);
 								   std::terminate();
 							   } },
 				   first, second);
@@ -207,11 +207,11 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		std::visit(
 			[&](const auto &a, const auto &b) {
 				if constexpr (std::equality_comparable_with<decltype(a), decltype(b)>) {
-					return a == b;
+					env.stack.emplace_back(a == b);
+					return;
 				}
 				std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line, token.col);
 				std::terminate();
-				return false;
 			},
 			first, second);
 
@@ -226,11 +226,11 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		std::visit(
 			[&](const auto &a, const auto &b) {
 				if constexpr (std::equality_comparable_with<decltype(a), decltype(b)>) {
-					return !(a == b);
+					env.stack.emplace_back(!(a == b));
+					return;
 				}
 				std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line, token.col);
 				std::terminate();
-				return true;
 			},
 			first, second);
 

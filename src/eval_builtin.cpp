@@ -201,6 +201,25 @@ void eval_as_string_view(Environment &env, const Token &token)
 	env.stack.emplace_back(std::string_view{ buffer, static_cast<std::size_t>(size) });
 }
 
+void eval_sv_length(Environment &env, const Token &token)
+{
+	const auto sv = get_from_stack<std::string_view>(env, token);
+	env.stack.emplace_back(static_cast<int>(sv.length()));
+}
+
+void eval_sv_get(Environment &env, const Token &token)
+{
+	const auto index = get_from_stack<int>(env, token);
+	const auto sv    = get_from_stack<std::string_view>(env, token);
+
+	if (index < 0 || index >= static_cast<int>(sv.size())) {
+		std::cerr << fmt::format("{}:{} Out of bounds string_view access\n", token.line, token.col);
+		std::terminate();
+	}
+
+	env.stack.emplace_back(static_cast<int>(sv[static_cast<std::size_t>(index)]));
+}
+
 constexpr inline std::array builtins{
 	BuiltinItem{ "print", 1, eval_print },
 	BuiltinItem{ "true", 0, +[](Environment &env, const Token &) { env.stack.emplace_back(true); } },
@@ -218,6 +237,8 @@ constexpr inline std::array builtins{
 	BuiltinItem{ "alloc", 1, eval_alloc },
 	BuiltinItem{ "dealloc", 1, eval_dealloc },
 	BuiltinItem{ "as_string_view", 2, eval_as_string_view },
+	BuiltinItem{ "string_view_length", 1, eval_sv_length },
+	BuiltinItem{ "string_view_get", 2, eval_sv_get },
 };
 
 }
