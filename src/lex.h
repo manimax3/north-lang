@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fmt/format.h>
 #include <string_view>
 #include <vector>
 
@@ -53,3 +54,8 @@ struct Token {
 };
 
 std::vector<Token> lex(std::string_view input);
+
+inline auto format_as(Token::TokenType type)
+{
+	return fmt::underlying(type);
+}
