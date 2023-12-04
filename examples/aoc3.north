@@ -1,0 +1,77 @@
+proc newline do 10 end
+proc zero do "0" 0 string_view_get end
+proc nine do "9" 0 string_view_get end
+proc period do "." 0 string_view_get end
+
+proc is_digit do // ( char -- bool )
+	if dup zero >= over nine <= and drop2 do
+		true
+	else
+		false
+	end
+end
+
+proc is_symbol do // ( char -- bool )
+	dup is_digit not swap // ( bool char -- )
+	dup newline != swap // ( bool bool char -- )
+	period != and and
+end
+
+proc check_adjacent do // ( data index width height -- bool)
+	drop drop drop drop false
+end
+
+proc part1 do
+	data variable
+	size variable
+
+	read_file size ! data !
+	data ? size ? as_string_view print
+	0 index dup variable !
+
+	0 gridwidth dup variable !
+	0 gridheight dup variable !
+
+	while index ? size ? < do
+		while data ? index ? + ? newline != do
+			index ? 1 + index !
+		end
+		if gridwidth ? 0 == do
+			index ? gridwidth !
+		end
+		gridheight ? 1 + gridheight !
+		index ? 1 + index !
+	end
+
+	"Grid width" print
+	gridwidth ? print
+
+	"Grid height" print
+	gridheight ? print
+
+	0 index !
+
+	while index ? size ? < do
+		if data ? index ? + ? is_digit do
+			data ? index ? + size ? index ? - parse_number resultnumber dup variable !
+			"Resultnumber" print resultnumber ? print
+			while data ? index ? + ? is_digit do
+				if data ? index ? gridwidth ? gridheight ? check_adjacent do
+				 // reusltnumber is valid
+				 // after all have been check sum up
+				end // todo
+				index ? 1 + index !
+			end
+		end
+
+		index ? 1 + index !
+	end
+
+	data ? dealloc
+end
+
+
+proc main do
+	"std.north" import
+	"examples/input3_s.txt" part1
+end
