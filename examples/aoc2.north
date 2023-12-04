@@ -1,0 +1,138 @@
+proc newline do 10 end
+proc zero do "0" 0 string_view_get end
+proc nine do "9" 0 string_view_get end
+
+proc is_color do // ( color data length -- bool )
+	length dup variable !
+	data dup variable !
+	if dup string_view_length length ? <= do
+		if data ? over string_view_length as_string_view over == do
+			true
+		else
+			false
+		end
+	else
+		false
+	end
+	drop2
+end
+
+proc part1 do
+	data variable
+	size variable
+	read_file size ! data !
+
+	"Input Text" print
+	data ? size ? as_string_view print
+
+	if size ? 10 < do
+		"File too short" print
+		return
+	end
+
+	0 gamesum dup variable !
+	0 powersum dup variable !
+
+	5 index dup variable !
+	
+	while index ? size ? < do
+		data ? index ? + size ? index ? - parse_number
+		if dup 0 < do
+			drop
+			"Failed to parse number" print
+			return
+		else
+			"Game id" print
+			dup print
+		end
+		gameid dup variable !
+
+		while data ? index ? + ? dup zero >= over nine <= and drop2 do
+			index ? 1 + index !
+		end
+
+		0 currentnumber dup variable !
+
+		12 red_max dup variable !
+		13 green_max dup variable !
+		14 blue_max dup variable !
+
+		false red_fails dup variable !
+		false green_fails dup variable !
+		false blue_fails dup variable !
+
+		0 max_red dup variable !
+		0 max_green dup variable !
+		0 max_blue dup variable !
+
+		while data ? index ? + ? newline != do
+			data ? index ? + ?  // current char
+			if dup zero >= over nine <= and do
+				// We have a number
+				data ? index ? + size ? index ? - parse_number currentnumber !
+				currentnumber ? print
+				
+				// skip over numbers
+				while data ? index ? + ? dup zero >= over nine <= and drop2 do
+					index ? 1 + index !
+				end
+				index ? 1 + index !
+
+				if "blue" data ? index ? + size ? index ? - is_color do
+					if currentnumber ? blue_max ? > do
+						true blue_fails !
+					end
+
+					if currentnumber ? max_blue ? > do
+						currentnumber ? max_blue !
+					end
+				end
+
+				if "green" data ? index ? + size ? index ? - is_color do
+					if currentnumber ? green_max ? > do
+						true green_fails !
+					end
+
+					if currentnumber ? max_green ? > do
+						currentnumber ? max_green !
+					end
+				end
+
+				if "red" data ? index ? + size ? index ? - is_color do
+					if currentnumber ? red_max ? > do
+						true red_fails !
+					end
+
+					if currentnumber ? max_red ? > do
+						currentnumber ? max_red !
+					end
+				end
+
+			end
+			drop
+
+			index ? 1 + index !
+		end
+
+		if red_fails ? not blue_fails ? not and green_fails ? not and do
+			gamesum ? gameid ? + gamesum !
+		end
+
+		powersum ? max_red ? max_blue ? * max_green ? * + powersum !
+
+		index ? 6 + index !
+	end
+
+	"Valid games sum: " print
+	gamesum ? print
+
+	"Power sum: " print
+	powersum ? print
+
+	data ? dealloc
+end
+
+proc main do
+	"std.north" import
+	"examples/input2_s.txt" part1
+end
