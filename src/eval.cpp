@@ -464,9 +464,29 @@ void eval_proc(const Procedure &proc, Environment &env)
 			case Token::Keyword_If:
 			case Token::Keyword_Else:
 				break;
-			case Token::Keyword_While:
-				ic = inst.backward_jump;
+			case Token::Keyword_While: {
+				const auto &do_inst = proc.body.at(branch_inst.forward_jump);
+				ic                  = do_inst.backward_jump;
 				break;
+			}
+			default:
+				std::cerr << fmt::format("{}:{} Unexpected preceding branching instruction T:{}\n", token.line,
+										 token.col, branch_inst.corresponding_token.type);
+				std::terminate();
+				break;
+			}
+
+			break;
+		}
+		case Token::Keyword_Break: {
+			const auto &branch_inst = proc.body.at(inst.backward_jump);
+
+			switch (branch_inst.corresponding_token.type) {
+			case Token::Keyword_While: {
+				const auto &do_inst = proc.body.at(branch_inst.forward_jump);
+				ic                  = do_inst.forward_jump;
+				break;
+			}
 			default:
 				std::cerr << fmt::format("{}:{} Unexpected preceding branching instruction T:{}\n", token.line,
 										 token.col, branch_inst.corresponding_token.type);

@@ -135,6 +135,42 @@ Procedure parse_procedure(std::span<Token> input, std::size_t *unconsomed_tokens
 			jump_stack.pop();
 			break;
 		}
+		case Token::Keyword_Break: {
+			if (jump_stack.empty()) {
+				std::cerr << "Expected do instruction preceding end instruction\n";
+				std::terminate();
+			}
+
+			// The top value might not be a while loop, we could be quite deep into some if statements
+			std::vector<std::size_t> buffer;
+			bool                     foundMatch = false;
+
+			while (!jump_stack.empty()) {
+				const auto &do_inst = proc.body[jump_stack.top()];
+				if (do_inst.corresponding_token.type == Token::Keyword_Do) {
+					const auto &branch_inst = proc.body[do_inst.backward_jump];
+					if (branch_inst.corresponding_token.type == Token::Keyword_While) {
+						inst.backward_jump = do_inst.backward_jump;
+						foundMatch         = true;
+						break;
+					}
+				}
+
+				buffer.push_back(jump_stack.top());
+				jump_stack.pop();
+			}
+
+			if (!foundMatch) {
+				std::cerr << "Break without a while used\n";
+				std::terminate();
+			}
+
+			for (const auto &item : buffer) {
+				jump_stack.push(item);
+			}
+
+			break;
+		}
 		default:
 			break;
 		}

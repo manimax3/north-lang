@@ -24,6 +24,8 @@ struct Token {
 		Keyword_Rotate,
 		Keyword_Import,
 		Keyword_Return,
+		Keyword_Break,
+		Keyword_Continue,
 
 		Op_Add,
 		Op_Sub,

@@ -20,6 +20,8 @@ constexpr inline std::array<std::pair<std::string_view, Token::TokenType>, Token
 	std::pair{ "rotate", Token::Keyword_Rotate },
 	std::pair{ "import", Token::Keyword_Import },
 	std::pair{ "return", Token::Keyword_Return },
+	std::pair{ "break", Token::Keyword_Break },
+	std::pair{ "continue", Token::Keyword_Continue },
 	std::pair{ "+", Token::Op_Add },
 	std::pair{ "-", Token::Op_Sub },
 	std::pair{ "*", Token::Op_Mul },
