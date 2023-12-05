@@ -48,6 +48,7 @@ std::vector<Token> lex(std::string_view input)
 	int col_counter  = 0;
 
 	for (auto it = input.begin(); it != input.end(); ++it) {
+		col_counter++;
 		const auto c = *it;
 
 		if (c == '\n') {
@@ -70,6 +71,7 @@ std::vector<Token> lex(std::string_view input)
 			result.push_back(token);
 			std::advance(it, 2 + length);
 			col_counter += static_cast<int>(2 + length);
+			continue;
 		}
 
 		else if (std::isdigit(c) != 0) {
@@ -89,6 +91,7 @@ std::vector<Token> lex(std::string_view input)
 			std::advance(it, length - 1);
 			col_counter += static_cast<int>(length - 1);
 			result.push_back(token);
+			continue;
 		}
 
 		else if (std::isalpha(c) != 0) {
@@ -120,10 +123,12 @@ std::vector<Token> lex(std::string_view input)
 				}
 				line_counter++;
 				continue;
+			} else {
+				it = it - 1;
 			}
 		}
 
-		else if (std::isspace(c) == 0) {
+		if (std::isspace(c) == 0) {
 			std::size_t length = 0;
 			for (auto sit = it; sit != input.end() && (std::isspace(*sit) == 0); ++sit) {
 				++length;
@@ -140,7 +145,6 @@ std::vector<Token> lex(std::string_view input)
 				}
 			}
 		}
-		col_counter++;
 	}
 
 	return result;
