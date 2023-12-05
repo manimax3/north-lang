@@ -3,6 +3,10 @@ proc zero do "0" 0 string_view_get end
 proc nine do "9" 0 string_view_get end
 proc period do "." 0 string_view_get end
 
+proc mod do
+	over over / * - // a%b = a - (b * (a/b))
+end
+
 proc is_digit do // ( char -- bool )
 	if dup zero >= over nine <= and drop2 do
 		true
@@ -18,7 +22,57 @@ proc is_symbol do // ( char -- bool )
 end
 
 proc check_adjacent do // ( data index width height -- bool)
-	drop drop drop drop false
+	height dup variable !
+	width dup variable !
+	index dup variable !
+	data dup variable !
+
+
+	index ? width ? 1 +
+	over over mod xpos dup variable !
+				/ ypos dup variable !
+
+	false has_adjacent dup variable !
+
+	0 1 - xoffset dup variable !
+	while xoffset ? 1 <= do
+		0 1 - yoffset dup variable !
+		while yoffset ? 1 <= do
+			if xoffset ? 0 == yoffset ? 0 == and not do
+				true valid_pos dup variable !
+				xpos ? xoffset ? +
+				if dup 0 < over width ? >= or do
+					false valid_pos !
+				end
+				// "Checking xpos" print dup print
+				drop
+
+				ypos ? yoffset ? +
+				if dup 0 < over height ? >= or do
+					false valid_pos !
+				end
+				// "Checking ypos" print dup print
+				drop
+
+				// data ? index ? + ? zero - print
+				if valid_pos ? do
+					data ?
+					xpos ? xoffset ? +
+					ypos ? yoffset ? + width ? 1 + * +  // Add one becaue newline
+					// "index is" print dup print
+					+ ? 
+					// "VALUE IS" print dup print
+
+					is_symbol has_adjacent ? or has_adjacent !
+				end
+				
+			end
+			yoffset ? 1 + yoffset !
+		end
+		xoffset ? 1 + xoffset !
+	end
+
+	has_adjacent ?
 end
 
 proc part1 do
@@ -51,21 +105,31 @@ proc part1 do
 
 	0 index !
 
+	0 partsum dup variable !
+
 	while index ? size ? < do
 		if data ? index ? + ? is_digit do
 			data ? index ? + size ? index ? - parse_number resultnumber dup variable !
-			"Resultnumber" print resultnumber ? print
+			// "Resultnumber" print resultnumber ? print
+			false is_adjacent dup variable !
 			while data ? index ? + ? is_digit do
 				if data ? index ? gridwidth ? gridheight ? check_adjacent do
-				 // reusltnumber is valid
-				 // after all have been check sum up
-				end // todo
+					true is_adjacent ? or is_adjacent !
+				end
 				index ? 1 + index !
 			end
+
+			if is_adjacent ? do
+				partsum ? resultnumber ? + partsum !
+			end
+
 		end
 
 		index ? 1 + index !
 	end
+
+	"Final partsum" print
+	partsum ? print
 
 	data ? dealloc
 end
@@ -73,5 +137,5 @@ end
 
 proc main do
 	"std.north" import
-	"examples/input3_s.txt" part1
+	"examples/input3.txt" part1
 end
