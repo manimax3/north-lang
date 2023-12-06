@@ -1,0 +1,75 @@
+proc newline do 10 end
+proc zero do "0" 0 string_view_get end
+proc nine do "9" 0 string_view_get end
+
+proc is_digit do // ( char -- bool )
+	if dup zero >= over nine <= and drop2 do
+		true
+	else
+		false
+	end
+end
+
+proc part1 do
+	data variable
+	size variable
+	read_file size ! data !
+
+	"Input Text" print
+	data ? size ? as_string_view print
+
+	if size ? 10 < do
+		"File too short" print
+		return
+	end
+
+	0 pointsum dup variable !
+
+	0 index dup variable !
+
+	while index ? size ? < do
+		while data ? index ? + ? ":" 0 string_view_get != do index ? 1 + index ! end
+		while data ? index ? + ? is_digit not do index ? 1 + index ! end
+
+		index ? start_winning_numbers dup variable !
+
+		while data ? index ? + ? "|" 0 string_view_get != do index ? 1 + index ! end
+
+		0 points dup variable !
+		while data ? index ? + ? newline != do
+
+			while data ? index ? + ? is_digit not do index ? 1 + index ! end
+			data ? index ? + size ? index ? - parse_number
+			current_number dup variable !
+
+			start_winning_numbers ? win_index dup variable !
+
+			while data ? win_index ? + ? "|" 0 string_view_get != do
+				data ? win_index ? + size ? win_index ? - parse_number
+				win_number dup variable !
+
+				if win_number ? current_number ? == do
+					if points ? 0 == do 1 points ! else points ? 2 * points ! end
+					break
+				end
+
+				while data ? win_index ? + ? " " 0 string_view_get != do win_index ? 1 + win_index ! end
+				win_index ? 1 + win_index !
+			end
+
+			while data ? index ? + ? is_digit do index ? 1 + index ! end
+		end
+
+		pointsum ? points ? + pointsum !
+
+		index ? 1 + index !
+	end
+
+	"Total points" print
+	pointsum ? print
+end
+
+proc main do
+	"std.north" import
+	"examples/input4.txt" part1
+end
