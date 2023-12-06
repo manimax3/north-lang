@@ -69,7 +69,7 @@ std::vector<Token> lex(std::string_view input)
 			for (auto sit = std::next(it); sit != input.end() && *sit != '"'; ++sit) {
 				++length;
 			}
-			token.content = std::string_view{ std::next(it), length };
+			token.content = std::string_view{ std::next(it), std::next(it, length + 1) };
 			result.push_back(token);
 			std::advance(it, 2 + length);
 			col_counter += static_cast<int>(2 + length);
@@ -89,7 +89,7 @@ std::vector<Token> lex(std::string_view input)
 					foundSep = true;
 				}
 			}
-			token.content = std::string_view{ it, length };
+			token.content = std::string_view{ it, std::next(it, length) };
 			std::advance(it, length - 1);
 			col_counter += static_cast<int>(length - 1);
 			result.push_back(token);
@@ -102,7 +102,7 @@ std::vector<Token> lex(std::string_view input)
 			for (auto sit = it; sit != input.end() && std::isspace(*sit) == 0; ++sit) {
 				++length;
 			}
-			token.content = std::string_view{ it, length };
+			token.content = std::string_view{ it, std::next(it, length) };
 			std::advance(it, length - 1);
 			col_counter += static_cast<int>(length);
 
@@ -135,7 +135,7 @@ std::vector<Token> lex(std::string_view input)
 			for (auto sit = it; sit != input.end() && (std::isspace(*sit) == 0); ++sit) {
 				++length;
 			}
-			token.content = std::string_view{ it, length };
+			token.content = std::string_view{ it, std::next(it, length) };
 
 			for (const auto &[name, type] : token_names) {
 				if (token.content == name) {

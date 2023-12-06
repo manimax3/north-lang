@@ -1,5 +1,6 @@
 #include "eval.h"
 
+#include <array>
 #include <fmt/format.h>
 #include <iostream>
 #include <thread>
@@ -88,12 +89,12 @@ void eval_sleep(Environment &env, const Token &token)
 	const auto first = env.stack.back();
 	env.stack.pop_back();
 
-	if (!std::holds_alternative<int>(first)) {
-		std::cerr << fmt::format("{}:{} Expected int value on the stack\n", token.line, token.col);
+	if (!std::holds_alternative<Integral>(first)) {
+		std::cerr << fmt::format("{}:{} Expected Integral value on the stack\n", token.line, token.col);
 		std::terminate();
 	}
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(std::get<int>(first)));
+	std::this_thread::sleep_for(std::chrono::milliseconds(std::get<Integral>(first)));
 }
 
 void eval_fopen(Environment &env, const Token &token)
@@ -137,8 +138,8 @@ void eval_fclose(Environment &env, const Token &token)
 
 void eval_fseek(Environment &env, const Token &token)
 {
-	const auto whence = get_from_stack<int>(env, token);
-	const auto offset = get_from_stack<int>(env, token);
+	const auto whence = get_from_stack<Integral>(env, token);
+	const auto offset = get_from_stack<Integral>(env, token);
 	auto      *file   = get_from_stack<void *>(env, token);
 	auto      *ffile  = static_cast<FILE *>(file);
 
@@ -152,7 +153,7 @@ void eval_ftell(Environment &env, const Token &token)
 	auto *ffile = static_cast<FILE *>(file);
 
 	const auto result = ftell(ffile);
-	env.stack.emplace_back(static_cast<int>(result)); // TODOMAX use int64
+	env.stack.emplace_back(static_cast<Integral>(result)); // TODOMAX use int64
 }
 
 void eval_fread(Environment &env, const Token &token)
@@ -160,12 +161,12 @@ void eval_fread(Environment &env, const Token &token)
 	auto *file  = get_from_stack<void *>(env, token);
 	auto *ffile = static_cast<FILE *>(file);
 
-	const auto n    = get_from_stack<int>(env, token);
-	const auto size = get_from_stack<int>(env, token);
+	const auto n    = get_from_stack<Integral>(env, token);
+	const auto size = get_from_stack<Integral>(env, token);
 	auto      *ptr  = get_from_stack<char *>(env, token);
 
 	const auto result = fread(ptr, static_cast<std::size_t>(size), static_cast<std::size_t>(n), ffile);
-	env.stack.emplace_back(static_cast<int>(result)); // TODOMAX use int64
+	env.stack.emplace_back(static_cast<Integral>(result)); // TODOMAX use int64
 }
 
 void eval_fwrite(Environment &env, const Token &token)
@@ -173,17 +174,17 @@ void eval_fwrite(Environment &env, const Token &token)
 	auto *file  = get_from_stack<void *>(env, token);
 	auto *ffile = static_cast<FILE *>(file);
 
-	const auto n    = get_from_stack<int>(env, token);
-	const auto size = get_from_stack<int>(env, token);
+	const auto n    = get_from_stack<Integral>(env, token);
+	const auto size = get_from_stack<Integral>(env, token);
 	auto      *ptr  = get_from_stack<char *>(env, token);
 
 	const auto result = fwrite(ptr, static_cast<std::size_t>(size), static_cast<std::size_t>(n), ffile);
-	env.stack.emplace_back(static_cast<int>(result)); // TODOMAX use int64
+	env.stack.emplace_back(static_cast<Integral>(result)); // TODOMAX use int64
 }
 
 void eval_alloc(Environment &env, const Token &token)
 {
-	const auto size   = get_from_stack<int>(env, token);
+	const auto size   = get_from_stack<Integral>(env, token);
 	auto      *result = malloc(static_cast<std::size_t>(size));
 	env.stack.emplace_back(static_cast<char *>(result)); // TODOMAX use int64
 }
@@ -196,7 +197,7 @@ void eval_dealloc(Environment &env, const Token &token)
 
 void eval_as_string_view(Environment &env, const Token &token)
 {
-	const auto size   = get_from_stack<int>(env, token);
+	const auto size   = get_from_stack<Integral>(env, token);
 	auto      *buffer = get_from_stack<char *>(env, token);
 	env.stack.emplace_back(std::string_view{ buffer, static_cast<std::size_t>(size) });
 }
@@ -204,33 +205,33 @@ void eval_as_string_view(Environment &env, const Token &token)
 void eval_sv_length(Environment &env, const Token &token)
 {
 	const auto sv = get_from_stack<std::string_view>(env, token);
-	env.stack.emplace_back(static_cast<int>(sv.length()));
+	env.stack.emplace_back(static_cast<Integral>(sv.length()));
 }
 
 void eval_sv_get(Environment &env, const Token &token)
 {
-	const auto index = get_from_stack<int>(env, token);
+	const auto index = get_from_stack<Integral>(env, token);
 	const auto sv    = get_from_stack<std::string_view>(env, token);
 
-	if (index < 0 || index >= static_cast<int>(sv.size())) {
+	if (index < 0 || index >= static_cast<Integral>(sv.size())) {
 		std::cerr << fmt::format("{}:{} Out of bounds string_view access\n", token.line, token.col);
 		std::terminate();
 	}
 
-	env.stack.emplace_back(static_cast<int>(sv[static_cast<std::size_t>(index)]));
+	env.stack.emplace_back(static_cast<Integral>(sv[static_cast<std::size_t>(index)]));
 }
 
 void eval_write_int(Environment &env, const Token &token)
 {
 	auto      *buffer = get_from_stack<char *>(env, token);
-	const auto number = get_from_stack<int>(env, token);
+	const auto number = get_from_stack<Integral>(env, token);
 	std::memcpy(buffer, &number, sizeof(number));
 }
 
 void eval_read_int(Environment &env, const Token &token)
 {
-	auto *buffer = get_from_stack<char *>(env, token);
-	int   number = 0;
+	auto    *buffer = get_from_stack<char *>(env, token);
+	Integral number = 0;
 	std::memcpy(&number, buffer, sizeof(number));
 	env.stack.emplace_back(number);
 }
@@ -254,6 +255,9 @@ constexpr inline std::array builtins{
 	BuiltinItem{ "as_string_view", 2, eval_as_string_view },
 	BuiltinItem{ "string_view_length", 1, eval_sv_length },
 	BuiltinItem{ "string_view_get", 2, eval_sv_get },
+	BuiltinItem{
+		"size_int", 0,
+		+[](Environment &env, const Token &) { env.stack.emplace_back(static_cast<Integral>(sizeof(Integral))); } },
 	BuiltinItem{ "write_int", 2, eval_write_int },
 	BuiltinItem{ "read_int", 1, eval_read_int },
 };

@@ -51,10 +51,10 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		env.stack.pop_back();
 
 		std::visit(overloaded{ [&](const double &a, const double &b) { env.stack.emplace_back(a + b); },
-							   [&](const int &a, const int &b) { env.stack.emplace_back(a + b); },
-							   [&](const double &a, const int &b) { env.stack.emplace_back(a + b); },
-							   [&](const int &a, const double &b) { env.stack.emplace_back(a + b); },
-							   [&](char *a, const int &b) { env.stack.emplace_back(a + b); },
+							   [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a + b); },
+							   [&](const double &a, const Integral &b) { env.stack.emplace_back(a + b); },
+							   [&](const Integral &a, const double &b) { env.stack.emplace_back(a + b); },
+							   [&](char *a, const Integral &b) { env.stack.emplace_back(a + b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
 															token.line, token.col, token.type);
@@ -71,10 +71,10 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		env.stack.pop_back();
 
 		std::visit(overloaded{ [&](const double &a, const double &b) { env.stack.emplace_back(a - b); },
-							   [&](const int &a, const int &b) { env.stack.emplace_back(a - b); },
-							   [&](const double &a, const int &b) { env.stack.emplace_back(a - b); },
-							   [&](const int &a, const double &b) { env.stack.emplace_back(a - b); },
-							   [&](char *a, const int &b) { env.stack.emplace_back(a - b); },
+							   [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a - b); },
+							   [&](const double &a, const Integral &b) { env.stack.emplace_back(a - b); },
+							   [&](const Integral &a, const double &b) { env.stack.emplace_back(a - b); },
+							   [&](char *a, const Integral &b) { env.stack.emplace_back(a - b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
 															token.line, token.col, token.type);
@@ -91,9 +91,9 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		env.stack.pop_back();
 
 		std::visit(overloaded{ [&](const double &a, const double &b) { env.stack.emplace_back(a * b); },
-							   [&](const int &a, const int &b) { env.stack.emplace_back(a * b); },
-							   [&](const double &a, const int &b) { env.stack.emplace_back(a * b); },
-							   [&](const int &a, const double &b) { env.stack.emplace_back(a * b); },
+							   [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a * b); },
+							   [&](const double &a, const Integral &b) { env.stack.emplace_back(a * b); },
+							   [&](const Integral &a, const double &b) { env.stack.emplace_back(a * b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
 															token.line, token.col, token.type);
@@ -110,9 +110,9 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		env.stack.pop_back();
 
 		std::visit(overloaded{ [&](const double &a, const double &b) { env.stack.emplace_back(a / b); },
-							   [&](const int &a, const int &b) { env.stack.emplace_back(a / b); },
-							   [&](const double &a, const int &b) { env.stack.emplace_back(a / b); },
-							   [&](const int &a, const double &b) { env.stack.emplace_back(a / b); },
+							   [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a / b); },
+							   [&](const double &a, const Integral &b) { env.stack.emplace_back(a / b); },
+							   [&](const Integral &a, const double &b) { env.stack.emplace_back(a / b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
 															token.line, token.col, token.type);
@@ -129,9 +129,9 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		env.stack.pop_back();
 
 		std::visit(overloaded{ [&](const double &a, const double &b) { env.stack.emplace_back(a < b); },
-							   [&](const int &a, const int &b) { env.stack.emplace_back(a < b); },
-							   [&](const double &a, const int &b) { env.stack.emplace_back(a < b); },
-							   [&](const int &a, const double &b) { env.stack.emplace_back(a < b); },
+							   [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a < b); },
+							   [&](const double &a, const Integral &b) { env.stack.emplace_back(a < b); },
+							   [&](const Integral &a, const double &b) { env.stack.emplace_back(a < b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
 															token.line, token.col, token.type);
@@ -148,9 +148,9 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		env.stack.pop_back();
 
 		std::visit(overloaded{ [&](const double &a, const double &b) { env.stack.emplace_back(a <= b); },
-							   [&](const int &a, const int &b) { env.stack.emplace_back(a <= b); },
-							   [&](const double &a, const int &b) { env.stack.emplace_back(a <= b); },
-							   [&](const int &a, const double &b) { env.stack.emplace_back(a <= b); },
+							   [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a <= b); },
+							   [&](const double &a, const Integral &b) { env.stack.emplace_back(a <= b); },
+							   [&](const Integral &a, const double &b) { env.stack.emplace_back(a <= b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
 															token.line, token.col, token.type);
@@ -167,9 +167,9 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		env.stack.pop_back();
 
 		std::visit(overloaded{ [&](const double &a, const double &b) { env.stack.emplace_back(a >= b); },
-							   [&](const int &a, const int &b) { env.stack.emplace_back(a >= b); },
-							   [&](const double &a, const int &b) { env.stack.emplace_back(a >= b); },
-							   [&](const int &a, const double &b) { env.stack.emplace_back(a >= b); },
+							   [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a >= b); },
+							   [&](const double &a, const Integral &b) { env.stack.emplace_back(a >= b); },
+							   [&](const Integral &a, const double &b) { env.stack.emplace_back(a >= b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
 															token.line, token.col, token.type);
@@ -186,9 +186,9 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		env.stack.pop_back();
 
 		std::visit(overloaded{ [&](const double &a, const double &b) { env.stack.emplace_back(a > b); },
-							   [&](const int &a, const int &b) { env.stack.emplace_back(a > b); },
-							   [&](const double &a, const int &b) { env.stack.emplace_back(a > b); },
-							   [&](const int &a, const double &b) { env.stack.emplace_back(a > b); },
+							   [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a > b); },
+							   [&](const double &a, const Integral &b) { env.stack.emplace_back(a > b); },
+							   [&](const Integral &a, const double &b) { env.stack.emplace_back(a > b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op {} on stack\n",
 															token.line, token.col, token.type);
@@ -252,7 +252,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 			cellIt->second = value;
 		} else if (std::holds_alternative<char *>(variable)) {
 			char *ptr = std::get<char *>(variable);
-			std::visit(overloaded{ [&](const int &ivalue) { *ptr = static_cast<char>(ivalue & 0xFF); },
+			std::visit(overloaded{ [&](const Integral &ivalue) { *ptr = static_cast<char>(ivalue & 0xFF); },
 								   [&](const std::string_view &str) { std::memcpy(ptr, str.data(), str.size()); },
 
 								   [&](const auto &) {
@@ -283,7 +283,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 			env.stack.push_back(cellIt->second);
 		} else if (std::holds_alternative<char *>(variable)) {
 			const auto *ptr = std::get<char *>(variable);
-			env.stack.emplace_back(static_cast<int>(*ptr));
+			env.stack.emplace_back(static_cast<Integral>(*ptr));
 		} else {
 			std::cerr << fmt::format("{}:{} Tried to store in non variable type\n", token.line, token.col);
 			std::terminate();
@@ -296,7 +296,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		const auto first = env.stack.back();
 		env.stack.pop_back();
 
-		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a << b); },
+		std::visit(overloaded{ [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a << b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
 															token.col);
@@ -312,7 +312,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		const auto first = env.stack.back();
 		env.stack.pop_back();
 
-		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a >> b); },
+		std::visit(overloaded{ [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a >> b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
 															token.col);
@@ -328,7 +328,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		const auto first = env.stack.back();
 		env.stack.pop_back();
 
-		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a | b); },
+		std::visit(overloaded{ [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a | b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
 															token.col);
@@ -344,7 +344,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		const auto first = env.stack.back();
 		env.stack.pop_back();
 
-		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a & b); },
+		std::visit(overloaded{ [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a & b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
 															token.col);
@@ -360,7 +360,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		const auto first = env.stack.back();
 		env.stack.pop_back();
 
-		std::visit(overloaded{ [&](const int &a, const int &b) { env.stack.emplace_back(a ^ b); },
+		std::visit(overloaded{ [&](const Integral &a, const Integral &b) { env.stack.emplace_back(a ^ b); },
 							   [&](const auto &, const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
 															token.col);
@@ -374,7 +374,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 		const auto first = env.stack.back();
 		env.stack.pop_back();
 
-		std::visit(overloaded{ [&](const int &a) { env.stack.emplace_back(~a); },
+		std::visit(overloaded{ [&](const Integral &a) { env.stack.emplace_back(~a); },
 							   [&](const auto &) {
 								   std::cerr << fmt::format("{}:{} Unexpected data types for op on stack\n", token.line,
 															token.col);
@@ -416,7 +416,7 @@ void eval_proc(const Procedure &proc, Environment &env)
 				std::from_chars(token.content.data(), token.content.data() + token.content.size(), value);
 				env.stack.emplace_back(value);
 			} else {
-				int value = 0.;
+				Integral value = 0.;
 				std::from_chars(token.content.data(), token.content.data() + token.content.size(), value);
 				env.stack.emplace_back(value);
 			}

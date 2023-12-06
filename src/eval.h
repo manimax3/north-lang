@@ -9,7 +9,8 @@
 #include <vector>
 
 struct Identifier : Token {};
-using Value = std::variant<Identifier, std::string_view, double, int, char *, bool, void *>;
+using Integral = std::int64_t;
+using Value    = std::variant<Identifier, std::string_view, double, Integral, char *, bool, void *>;
 
 struct Environment {
 	std::vector<Value>       stack;
