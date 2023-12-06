@@ -10,7 +10,7 @@ proc is_digit do // ( char -- bool )
 	end
 end
 
-proc part1 do
+proc solve do
 	data variable
 	size variable
 	read_file size ! data !
@@ -27,6 +27,25 @@ proc part1 do
 
 	0 index dup variable !
 
+
+	0 count_cards dup variable !
+	while index ? size ? < do
+		if data ? index ? + ? newline == do
+			count_cards ? 1 + count_cards !
+		end
+		index ? 1 + index !
+	end
+	0 index !
+
+	count_cards ? size_int * alloc card_counts dup variable !
+	while index ? count_cards ? < do
+		1 card_counts ? index ? size_int * + write_int
+		index ? 1 + index !
+	end
+	0 index !
+
+	0 card_index dup variable !
+
 	while index ? size ? < do
 		while data ? index ? + ? ":" 0 string_view_get != do index ? 1 + index ! end
 		while data ? index ? + ? is_digit not do index ? 1 + index ! end
@@ -36,6 +55,7 @@ proc part1 do
 		while data ? index ? + ? "|" 0 string_view_get != do index ? 1 + index ! end
 
 		0 points dup variable !
+		0 count_matching dup variable !
 		while data ? index ? + ? newline != do
 
 			while data ? index ? + ? is_digit not do index ? 1 + index ! end
@@ -50,6 +70,7 @@ proc part1 do
 
 				if win_number ? current_number ? == do
 					if points ? 0 == do 1 points ! else points ? 2 * points ! end
+					count_matching ? 1 + count_matching !
 					break
 				end
 
@@ -60,16 +81,43 @@ proc part1 do
 			while data ? index ? + ? is_digit do index ? 1 + index ! end
 		end
 
-		pointsum ? points ? + pointsum !
+		// "CARD INDEX" print
+		// card_index ? print
+		// "matching" print
+		// count_matching ? print
+		// "ADDING" print
 
+		card_index ? 1 + ci dup variable !
+		card_counts ? card_index ? size_int * + read_int //dup print
+		while ci ? card_index ? 1 + count_matching ? + < ci ? count_cards ? < and do
+			dup card_counts ? ci ? size_int * + read_int +
+			card_counts ? ci ? size_int * + write_int
+			ci ? 1 + ci !
+		end
+		drop
+
+		pointsum ? points ? + pointsum !
 		index ? 1 + index !
+		card_index ? 1 + card_index !
 	end
+	0 index !
 
 	"Total points" print
 	pointsum ? print
+
+	0 countsum dup variable !
+	while index ? count_cards ? < do
+		countsum ? card_counts ? index ? size_int * + read_int + countsum !
+		index ? 1 + index !
+	end
+
+	"Card count sum" print
+	countsum ? print
+
+	card_counts ? dealloc
 end
 
 proc main do
 	"std.north" import
-	"examples/input4.txt" part1
+	"examples/input4.txt" solve
 end
