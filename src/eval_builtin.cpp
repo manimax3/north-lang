@@ -220,6 +220,21 @@ void eval_sv_get(Environment &env, const Token &token)
 	env.stack.emplace_back(static_cast<int>(sv[static_cast<std::size_t>(index)]));
 }
 
+void eval_write_int(Environment &env, const Token &token)
+{
+	auto      *buffer = get_from_stack<char *>(env, token);
+	const auto number = get_from_stack<int>(env, token);
+	std::memcpy(buffer, &number, sizeof(number));
+}
+
+void eval_read_int(Environment &env, const Token &token)
+{
+	auto *buffer = get_from_stack<char *>(env, token);
+	int   number = 0;
+	std::memcpy(&number, buffer, sizeof(number));
+	env.stack.emplace_back(number);
+}
+
 constexpr inline std::array builtins{
 	BuiltinItem{ "print", 1, eval_print },
 	BuiltinItem{ "true", 0, +[](Environment &env, const Token &) { env.stack.emplace_back(true); } },
@@ -239,6 +254,8 @@ constexpr inline std::array builtins{
 	BuiltinItem{ "as_string_view", 2, eval_as_string_view },
 	BuiltinItem{ "string_view_length", 1, eval_sv_length },
 	BuiltinItem{ "string_view_get", 2, eval_sv_get },
+	BuiltinItem{ "write_int", 2, eval_write_int },
+	BuiltinItem{ "read_int", 1, eval_read_int },
 };
 
 }

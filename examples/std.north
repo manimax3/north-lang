@@ -26,6 +26,8 @@ proc read_file do
 	buffer ? filesize ? // Leave buffer and filesize on top of the stack
 end
 
+proc size_int do 4 end
+
 proc parse_number do
 	length dup variable !
 	buffer dup variable !
