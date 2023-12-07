@@ -1,0 +1,227 @@
+proc newline do 10 end
+proc zero do "0" 0 string_view_get end
+proc nine do "9" 0 string_view_get end
+
+proc is_digit do // ( char -- bool )
+	if dup zero >= over nine <= and drop2 do
+		true
+	else
+		false
+	end
+end
+
+proc is_alpha do // ( char -- bool )
+	c dup variable !
+	c ? "a" 0 string_view_get >= c ? "z" 0 string_view_get <= and 
+	c ? "A" 0 string_view_get >= c ? "Z" 0 string_view_get <= and 
+		or
+end
+
+proc int_list_parse_line do
+	remaining dup variable !
+	data dup variable !
+	0 index dup variable !
+	0 count dup variable !
+
+	while data ? index ? + ? newline != index ? remaining ? < and do
+		while data ? index ? + ? is_digit not do index ? 1 + index ! end 
+		data ? index ? + remaining ? index ? - parse_number
+		while data ? index ? + ? is_digit do index ? 1 + index ! end 
+		count ? 1 + count !
+		if data ? index ? + ? newline == do break end
+		index ? 1 + index !
+	end
+
+	count ? int_list_stack_to_array dup int_list_reverse
+end
+
+proc int_list_stack_to_array do
+	count dup variable !
+	count ? 1 + size_int * alloc list dup variable !
+	count ? list ? write_int // Write out the size
+
+	0 index dup variable !
+
+	while index ? count ? < do
+		dup list ? index ? 1 + size_int * + write_int drop
+		index ? 1 + index !
+	end
+
+	list ?
+end
+
+proc int_list_size do
+	read_int
+end
+
+proc int_list_get do // ( n list -- r )
+	swap 1 + size_int * + read_int
+end
+
+proc int_list_set do // ( value idx list -- )
+	list dup variable !
+	idx dup variable !
+	value dup variable !
+	value ? list ? idx ? 1 + size_int * + write_int
+	// rotate rotate 1 + size_int * rotate swap + write_int
+end
+
+proc int_list_reverse do // ( list -- )
+	list dup variable !
+	list ? int_list_size size dup variable !
+	0 index dup variable !
+	while index ? size ? 2 / < do
+		index ? list ? int_list_get
+		size ? index ? - 1 - list ? int_list_get
+		index ? list ? int_list_set
+		size ? index ? - 1 - list ? int_list_set
+		index ? 1 + index !
+	end
+end
+
+proc int_list_print do // ( list -- )
+	0 index dup variable !
+	"Int List: Size: " print
+	dup int_list_size print
+	while index ? over int_list_size < do 
+		index ? over int_list_get print
+		index ? 1 + index !
+	end
+	drop
+	"EOL" print
+end
+
+proc int_list_make do // ( size -- list )
+	size dup variable !
+	size ? 1 + size_int * alloc list dup variable !
+	size ? list ? write_int
+	list ?
+end
+
+proc int_list_join do // ( listA listB -- listC )
+	listB dup variable !
+	listA dup variable !
+	listA ? int_list_size listB ? int_list_size + int_list_make result dup variable !
+	0 index dup variable !
+	while index ? listA ? int_list_size < do
+		 index ? listA ? int_list_get index ? result ? int_list_set
+		 index ? 1 + index !
+	end
+	0 index !
+
+	while index ? listB ? int_list_size < do
+		 index ? listB ? int_list_get index ? listA ? int_list_size + result ? int_list_set
+		 index ? 1 + index !
+	end
+
+	result ?
+end
+
+proc int_list_min do // ( listA -- min(listA) )
+	list dup variable !
+	if list ? int_list_size 0 == do
+		"Cannot calculate min of empty list" print
+		0
+	end
+
+	1 index dup variable !
+	0 list ? int_list_get current_min dup variable !
+	while index ? list ? int_list_size < do
+		index ? list ? int_list_get
+		if dup current_min ? < do
+			dup current_min !
+		end
+		drop
+		index ? 1 + index !
+	end
+
+	current_min ?
+end
+
+proc map_seeds do // ( seedslist(m) mapping -- )
+	mapping dup variable !
+	seeds dup variable !
+	0 index dup variable !
+
+	while index ? seeds ? int_list_size < do
+		index ? seeds ? int_list_get seed dup variable !
+
+		0 mapindex dup variable !
+		while mapindex ? mapping ? int_list_size 3 / < do
+			mapindex ? 3 * 0 + mapping ? int_list_get range_start dup variable !
+			mapindex ? 3 * 1 + mapping ? int_list_get source_start dup variable !
+			mapindex ? 3 * 2 + mapping ? int_list_get range_length dup variable !
+
+			if seed ? source_start ? >= seed ? source_start ? range_length ? + < and do
+				range_start ? seed ? source_start ? - + index ? seeds ? int_list_set
+			end
+
+			mapindex ? 1 + mapindex !
+		end
+
+		index ? 1 + index !
+	end
+end
+
+proc solve do
+	data variable
+	size variable
+	read_file size ! data !
+
+	"Input Text" print
+	data ? size ? as_string_view print
+
+	if size ? 10 < do
+		"File too short" print
+		return
+	end
+
+	7 index dup variable !
+
+	data ? index ? + size ? index ? - int_list_parse_line
+	seed_list dup variable !
+
+	while data ? index ? + ? newline != do index ? 1 + index ! end
+	index ? 2 + index !
+
+	while index ? size ? < do
+		while data ? index ? + ? is_alpha do
+			while data ? index ? + ? newline != do index ? 1 + index ! end
+			index ? 1 + index !
+
+			0 int_list_make all_mappings dup variable !
+
+			while data ? index ? + ? is_digit do
+				data ? index ? + size ? index ? - int_list_parse_line
+				mapping dup variable !
+				all_mappings ? mapping ? int_list_join
+					all_mappings ? dealloc all_mappings !
+				mapping ? dealloc
+
+				while data ? index ? + ? newline != do index ? 1 + index ! end
+				index ? 1 + index !
+			end
+
+			"SEED LIST" print
+			seed_list ? int_list_print 
+			"Mappings" print
+			all_mappings ? int_list_print
+			seed_list ? all_mappings ? map_seeds
+			"Mapped LIST" print
+			seed_list ? int_list_print 
+
+			all_mappings ? dealloc
+		end
+		index ? 1 + index !
+	end
+
+	"Final id min" print
+	seed_list ? int_list_min print
+
+	seed_list ? delloc
+end
+
+proc main do
+	"std.north" import
+	"examples/input5.txt" solve
+end

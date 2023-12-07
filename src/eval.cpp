@@ -285,7 +285,7 @@ bool eval_ops(const Token &token, Environment &env, VariablesMap &variables)
 			const auto *ptr = std::get<char *>(variable);
 			env.stack.emplace_back(static_cast<Integral>(*ptr));
 		} else {
-			std::cerr << fmt::format("{}:{} Tried to store in non variable type\n", token.line, token.col);
+			std::cerr << fmt::format("{}:{} Tried to load from non variable type\n", token.line, token.col);
 			std::terminate();
 		}
 	} break;
