@@ -98,6 +98,16 @@ proc int_list_make do // ( size -- list )
 	list ?
 end
 
+proc int_list_append do // ( value list(deletes old) -- list )
+	list dup variable !
+	value dup variable !
+	1 int_list_make tba dup variable !
+	value ? 0 tba ? int_list_set
+	list ? tba ? int_list_join
+	list ? dealloc
+	tba ? dealloc
+end
+
 proc int_list_join do // ( listA listB -- listC )
 	listB dup variable !
 	listA dup variable !
@@ -138,6 +148,22 @@ proc int_list_min do // ( listA -- min(listA) )
 	current_min ?
 end
 
+proc min do // ( a b -- min(a, b) )
+	if over over > do
+		drop2
+	else
+		drop
+	end
+end
+
+proc max do // ( a b -- min(a, b) )
+	if over over < do
+		drop2
+	else
+		drop
+	end
+end
+
 proc map_seeds do // ( seedslist(m) mapping -- )
 	mapping dup variable !
 	seeds dup variable !
@@ -163,7 +189,70 @@ proc map_seeds do // ( seedslist(m) mapping -- )
 	end
 end
 
-proc solve do
+proc map_seed_ranges do // ( seedslist mapping -- seedslist )
+	mapping dup variable !
+	seeds dup variable !
+	0 index dup variable !
+
+	while index ? seeds ? int_list_size 2 / < do
+		index ? 2 * 0 + seeds ? int_list_get seed_start dup variable !
+		index ? 2 * 1 + seeds ? int_list_get seed_length dup variable !
+		seed_start ? seed_length ? + seed_end dup variable !
+
+		0 mapindex dup variable !
+		while mapindex ? mapping ? int_list_size 3 / < do
+			mapindex ? 3 * 0 + mapping ? int_list_get range_start dup variable !
+			mapindex ? 3 * 1 + mapping ? int_list_get source_start dup variable !
+			mapindex ? 3 * 2 + mapping ? int_list_get range_length dup variable !
+			range_start ? range_length ? + range_end dup variable !
+			source_start ? range_length ? + source_end dup variable !
+
+			if seed_start ? source_start ? >= seed_start ? source_end ? < and
+			seed_end ? source_end ? <= seed_end ? source_start ? > and or do
+				// We have some kind of overlap
+
+				range_start ? source_start ? - offset dup variable !
+				if source_start ? seed_start ? <= seed_end ? source_end ? <= and do
+					// We have total overlap => no need to add more ranges
+					seed_start ? offset ? + index ? 2 * 0 + seeds ? int_list_set
+				else
+					// Partial overlap
+
+					// First map the common part
+					seed_start ? source_start ? max new_start dup variable !
+					seed_end ? source_end ? min new_end dup variable !
+					new_end ? new_start ? - new_length dup variable !
+					new_start ? offset ? + index ? 2 * 0 + seeds ? int_list_set
+					new_length ?		   index ? 2 * 1 + seeds ? int_list_set
+
+					// Left side overhang
+					if seed_start ? source_start ? < do
+						seed_start ? new_start !
+						source_start ? new_end !
+						new_end ? new_start ? - new_length !
+						new_start ? seeds ? int_list_append seeds !
+						new_length ? seeds ? int_list_append seeds !
+					end
+
+					// Right side overhang
+					if seed_end ? source_end ? > do
+						source_end ? new_start !
+						seed_end ? new_end !
+						new_end ? new_start ? - new_length !
+						new_start ? seeds ? int_list_append seeds !
+						new_length ? seeds ? int_list_append seeds !
+					end
+				end
+			end
+			mapindex ? 1 + mapindex !
+		end
+
+		index ? 1 + index !
+	end
+	seeds ?
+end
+
+proc part1 do
 	data variable
 	size variable
 	read_file size ! data !
@@ -202,26 +291,77 @@ proc solve do
 				index ? 1 + index !
 			end
 
-			"SEED LIST" print
-			seed_list ? int_list_print 
-			"Mappings" print
-			all_mappings ? int_list_print
 			seed_list ? all_mappings ? map_seeds
-			"Mapped LIST" print
-			seed_list ? int_list_print 
 
 			all_mappings ? dealloc
 		end
 		index ? 1 + index !
 	end
-
 	"Final id min" print
 	seed_list ? int_list_min print
 
 	seed_list ? delloc
 end
 
+proc part2 do
+	data variable
+	size variable
+	read_file size ! data !
+
+	if size ? 10 < do
+		"File too short" print
+		return
+	end
+
+	7 index dup variable !
+
+	data ? index ? + size ? index ? - int_list_parse_line
+	seed_list dup variable !
+
+	while data ? index ? + ? newline != do index ? 1 + index ! end
+	index ? 2 + index !
+
+	while index ? size ? < do
+		while data ? index ? + ? is_alpha do
+			while data ? index ? + ? newline != do index ? 1 + index ! end
+			index ? 1 + index !
+
+			0 int_list_make all_mappings dup variable !
+
+			while data ? index ? + ? is_digit do
+				data ? index ? + size ? index ? - int_list_parse_line
+				mapping dup variable !
+				all_mappings ? mapping ? int_list_join
+					all_mappings ? dealloc all_mappings !
+				mapping ? dealloc
+
+				while data ? index ? + ? newline != do index ? 1 + index ! end
+				index ? 1 + index !
+			end
+
+			seed_list ? all_mappings ? map_seed_ranges seed_list !
+
+			all_mappings ? dealloc
+		end
+		index ? 1 + index !
+	end
+	0 index !
+
+	seed_list ? int_list_print
+	0 seed_list ? int_list_get current_min dup variable !
+	"Final id min" print
+	while index ? seed_list ? int_list_size 2 / < do
+		current_min ? index ? 2 * seed_list ? int_list_get min current_min !
+		index ? 1 + index !
+		
+	end
+	current_min ? print
+
+	seed_list ? delloc
+end
+
 proc main do
 	"std.north" import
-	"examples/input5.txt" solve
+	// "examples/input5.txt" part1
+	"examples/input5.txt" part2
 end
