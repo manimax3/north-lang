@@ -1,0 +1,136 @@
+proc sqrt do // ( int -- sqrt(int) )
+	s dup variable !
+
+
+	if s ? 1 <= do
+		s ?
+		return
+	end
+
+	s ? 2 / x0 dup variable !
+	s ? x0 ? /	x0 ? + 2 / x1 dup variable !
+
+	while x1 ? x0 ? < do
+		x1 ? x0 !
+		x0 ? s ? x0 ? / + 2 / x1 !
+	end
+	x0 ?
+end
+
+proc solve do
+	data variable
+	size variable
+	read_file size ! data !
+
+	"Input Text" print
+	data ? size ? as_string_view print
+
+	if size ? 10 < do
+		"File too short" print
+		return
+	end
+
+	0 index dup variable !
+	while data ? index ? + ? is_digit not do index ? 1 + index ! end
+	data ? index ? + size ? index ? - int_list_parse_line times dup variable !
+
+	while data ? index ? + ? newline != do index ? 1 + index ! end
+	while data ? index ? + ? is_digit not do index ? 1 + index ! end
+	data ? index ? + size ? index ? - int_list_parse_line distances dup variable !
+	0 index !
+
+	"Times:" print
+	times ? int_list_print
+	"Distances: " print
+	distances ? int_list_print
+
+	// (t - x) * x = tx - x^2
+	// - x^2 + tx > d
+	// - x^2 + tx - d > 0
+	// -t +- sqrt(t^2 - 4 * -1 * -d) / (2 * -1)
+	// -t +- sqrt(t^2 - 4d) / (-2)
+
+	1 total dup variable !
+
+	while index ? times ? int_list_size < do
+		index ? times ? int_list_get time dup variable !
+		index ? distances ? int_list_get dist dup variable !
+
+		1 attempt dup variable !
+		0 count_ways dup variable !
+
+		while attempt ? time ? < do
+			time ? attempt ? - attempt ? *
+			if dist ? > do
+				count_ways ? 1 + count_ways !
+			end
+			attempt ? 1 + attempt !
+		end
+
+		total ? count_ways ? * total !
+
+		index ? 1 + index !
+	end
+
+	"Total" print
+	total ? print
+
+	0 index !
+	while data ? index ? + ? is_digit not do index ? 1 + index ! end
+
+	0 time dup variable !
+	0 distance dup variable !
+
+	while data ? index ? + ? newline != do 
+		if data ? index ? + ? is_digit do
+			data ? index ? + ? zero -
+			time ? 10 * + time !
+		end
+
+		index ? 1 + index !
+	end
+
+	index ? 1 + index !
+	while data ? index ? + ? is_digit not do index ? 1 + index ! end
+
+	while data ? index ? + ? newline != do 
+		if data ? index ? + ? is_digit do
+			data ? index ? + ? zero -
+			distance ? 10 * + distance !
+		end
+
+		index ? 1 + index !
+		if index ? size ? >= do break end
+	end
+
+	// -x^2 + tx - d = 0
+	// sqrt(t^2 - 4d)
+
+	time ? time ? * 4 distance ? * - sqrt det dup variable !
+
+	0 time ? - det ? + 0 2 - / sol1 dup variable !
+	0 time ? - det ? - 0 2 - / sol2 dup variable !
+
+	while time ? sol1 ? - sol1 ? * distance ? > do
+		"Sol 1 too big" print
+		sol1 ? 1 - sol1 !
+	end
+
+	while time ? sol2 ? - sol2 ? * distance ? < do
+		"Sol 2 too small" print
+		sol2 ? 1 + sol2 !
+	end
+
+	"Count soltions part 2" print
+	sol2 ? sol1 ? - print
+
+	times ? dealloc
+	distances ? dealloc
+end
+
+proc main do
+	"std.north" import
+	"int_list.north" import
+
+	"examples/input6.txt" solve
+end
