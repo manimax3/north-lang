@@ -58,19 +58,54 @@ proc hand_type do // ( hand_index hand_list -- int )
 	1 return
 end
 
-proc compare_hands do // ( hi1 hi2 hand_list -- (hi1 < hi2) )
+proc compare_hands do // ( promotion hi1 hi2 hand_list -- (hi1 < hi2) )
 	hl dup variable !
 	hi_second dup variable !
 	hi_first dup variable !
+	promotion dup variable !
 
-	hi_first ? hl ? hand_type hi_first_type dup variable !
-	hi_second ? hl ? hand_type hi_second_type dup variable !
+	0 ci dup variable !
+	hi_first_type dup variable
+	hi_second_type dup variable
+
+	if promotion ? do
+		11 int_list_make buffer dup variable !
+
+		while ci ? 11 < do
+			hi_first ? 11 * ci ? + hl ? int_list_get ci ? buffer ? int_list_set
+			ci ? 1 + ci !
+		end
+		0 ci !
+		0 buffer ? promote_card
+		0 buffer ? hand_type hi_first_type !
+
+		while ci ? 11 < do
+			hi_second ? 11 * ci ? + hl ? int_list_get ci ? buffer ? int_list_set
+			ci ? 1 + ci !
+		end
+		0 buffer ? promote_card
+		0 buffer ? hand_type hi_second_type !
+		0 ci !
+
+		buffer ? dealloc
+	else
+		hi_first ? hl ? hand_type hi_first_type !
+		hi_second ? hl ? hand_type hi_second_type !
+	end
+
+	// "Comparing" print
+	// hi_first ? print
+	// hi_second ? print
+	// "First type" print
+	// hi_first_type ? print
+	// "Second type" print
+	// hi_second_type ? print
 
 	if hi_first_type ? hi_second_type ? != do
 		hi_first_type ? hi_second_type ? < return
 	end
 
-	0 ci dup variable !
+	0 ci !
 	while ci ? 5 < do
 		hi_first ? 11 * ci ? 2 * + hl ? int_list_get
 		first_card dup variable !
@@ -92,7 +127,13 @@ proc compare_hands do // ( hi1 hi2 hand_list -- (hi1 < hi2) )
 			// end
 
 			// A K Q J T
-			"AKQJT98765432" ranking dup variable !
+			ranking dup variable
+			if promotion ? do
+				"AKQT98765432J" ranking !
+			else
+				"AKQJT98765432" ranking !
+			end
+
 			0 i dup variable !
 			while i ? ranking ? string_view_length < do
 				if first_card ? ranking ? i ? string_view_get == do
@@ -123,9 +164,79 @@ proc compare_hands do // ( hi1 hi2 hand_list -- (hi1 < hi2) )
 	false return
 end
 
-proc sort_hands do // ( counthands handlist -- intdexlist )
+proc type_to_index do // ( type(char) -- int (higher is better)
+	type dup variable !
+	"AKQT98765432J" ranking dup variable !
+	0 index dup variable !
+	while index ? ranking ? string_view_length < do
+		if type ? ranking ? index ? string_view_get == do
+			ranking ? string_view_length index ? -
+			return
+		end
+		index ? 1 + index !
+	end
+
+	0 return
+end
+
+proc promote_card do // ( hi hand_list -- )
+	hl dup variable !
+	hi dup variable !
+
+	0 1 - highest_index dup variable !
+	0 1 - highest_count dup variable !
+	0 1 - highest_card dup variable !
+	0 count_jokers dup variable !
+
+	0 index dup variable !
+	while index ? 5 < do
+		hi ? 11 * index ? 2 * 0 + + hl ? int_list_get current_card dup variable !
+		hi ? 11 * index ? 2 * 1 + + hl ? int_list_get current_count dup variable !
+		if current_count ? highest_count ? > // count
+			current_count ? highest_count ? == // count
+			highest_card ? type_to_index current_card ? type_to_index < and or
+			current_card ? "J" 0 string_view_get != and // type ist not joker
+			do
+			index ? highest_index !
+			current_count ? highest_count !
+			current_card ? highest_card !
+		end
+
+		if current_card ? "J" 0 string_view_get == do
+			count_jokers ? 1 + count_jokers !
+		end
+
+		index ? 1 + index !
+	end
+
+	if highest_index ? 0 1 - == do
+		0 highest_index !
+		0 highest_count !
+		"A" 0 string_view_get highest_card !
+	end
+
+	0 index !
+	while index ? 5 < do
+		hi ? 11 * index ? 2 * 0 + + hl ? int_list_get current_card dup variable !
+
+		if current_card ? "J" 0 string_view_get == do
+			highest_card ? hi ? 11 * index ? 2 * 0 + + hl ? int_list_set
+			count_jokers ? highest_count ? + hi ? 11 * index ? 2 * 1 + + hl ? int_list_set
+		end
+
+		if current_card ? highest_card ? == do
+			count_jokers ? highest_count ? + hi ? 11 * index ? 2 * 1 + + hl ? int_list_set
+		end
+
+		index ? 1 + index !
+	end
+
+end
+
+proc sort_hands do // ( promotion counthands handlist -- intdexlist )
 	hl dup variable !
 	count dup variable !
+	promotion dup variable !
 
 	count ? int_list_make resultlist dup variable !
 	0 index dup variable !
@@ -157,7 +268,7 @@ proc sort_hands do // ( counthands handlist -- intdexlist )
 		
 		current_min ? 1 + index !
 		while index ? count ? < do
-			if index ? current_min ? hl ? compare_hands do
+			if promotion ? index ? current_min ? hl ? compare_hands do
 				if index ? checked_list ? int_list_get 0 == do
 					index ? current_min !
 				end
@@ -179,6 +290,7 @@ end
 proc solve do
 	data variable
 	size variable
+	promote dup variable !
 	read_file size ! data ! // test
 	"Input Text" print
 	data ? size ? as_string_view print
@@ -257,7 +369,7 @@ proc solve do
 	0 index !
 
 	"Starting to sort..." print
-	count_hands ? hand_list ? sort_hands sorted_indexes dup variable !
+	promote ? count_hands ? hand_list ? sort_hands sorted_indexes dup variable !
 
 
 	0 total dup variable !
@@ -278,6 +390,8 @@ end
 proc main do
 	"std.north" import
 	"int_list.north" import
-	"examples/input7.txt" solve
+	// "examples/input7_s.txt" false solve
+	" === " print
+	"examples/input7_s.txt" true solve
 end
 
