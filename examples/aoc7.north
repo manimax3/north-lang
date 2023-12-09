@@ -1,0 +1,283 @@
+proc hand_type do // ( hand_index hand_list -- int )
+	hl dup variable !
+	hi dup variable !
+
+	// Find the highest count
+	hi ? 11 * 1 + hl ? int_list_get highest_count dup variable !
+	0 highest_index dup variable !
+
+	0 index dup variable !
+
+	while index ? 5 < do
+		if index ? 2 * 1 + hi ? 11 * + hl ? int_list_get dup highest_count ? >= do
+		 	highest_count !
+		 	index ? highest_index !
+		 end
+		index ? 1 + index !
+	end
+
+	if highest_count ? 5 == do
+		7 return // five of a kind
+	end
+
+	if highest_count ? 4 == do
+		6 return // four of a kind
+	end
+
+	if highest_count ? 3 == do
+		// Its either full house or three of a kind
+		0 index !
+		while index ? 5 < do
+			if index ? 2 * 1 + hi ? 11 * + hl ? int_list_get 2 == do
+				// Has to be a full house
+				5 return
+			end
+			index ? 1 + index !
+		end
+
+		4 return
+	end
+
+	if highest_count ? 2 == do
+		// Its either two pair or just a pair
+		0 index !
+		while index ? 5 < do
+			if index ? 2 * 1 + hi ? 11 * + hl ? int_list_get 2 ==
+				index ? 2 * 0 + hi ? 11 * + hl ? int_list_get 
+				highest_index ? 2 * 0 + hi ? 11 * + hl ? int_list_get != 
+				and do
+				// Has to be a full house
+				3 return
+			end
+			index ? 1 + index !
+		end
+
+		2 return
+	end
+
+	1 return
+end
+
+proc compare_hands do // ( hi1 hi2 hand_list -- (hi1 < hi2) )
+	hl dup variable !
+	hi_second dup variable !
+	hi_first dup variable !
+
+	hi_first ? hl ? hand_type hi_first_type dup variable !
+	hi_second ? hl ? hand_type hi_second_type dup variable !
+
+	if hi_first_type ? hi_second_type ? != do
+		hi_first_type ? hi_second_type ? < return
+	end
+
+	0 ci dup variable !
+	while ci ? 5 < do
+		hi_first ? 11 * ci ? 2 * + hl ? int_list_get
+		first_card dup variable !
+
+		hi_second ? 11 * ci ? 2 * + hl ? int_list_get
+		second_card dup variable !
+
+		if first_card ? second_card ? != do
+			// if first_card ? is_digit second_card ? is_digit not and do
+			// 	true return
+			// end
+
+			// if first_card ? is_digit not second_card ? is_digit and do
+			// 	false return
+			// end
+
+			// if first_card ? is_digit second_card ? is_digit and do
+			// 	first_card ? second_card ? < return
+			// end
+
+			// A K Q J T
+			"AKQJT98765432" ranking dup variable !
+			0 i dup variable !
+			while i ? ranking ? string_view_length < do
+				if first_card ? ranking ? i ? string_view_get == do
+					i ? first_card !
+					break
+				end
+				i ? 1 + i !
+			end
+
+			0 i !
+			while i ? ranking ? string_view_length < do
+				if second_card ? ranking ? i ? string_view_get == do
+					i ? second_card !
+					break
+				end
+				i ? 1 + i !
+			end
+
+			first_card ? second_card ? > return
+
+			break
+		end
+
+		ci ? 1 + ci !
+	end
+
+
+	false return
+end
+
+proc sort_hands do // ( counthands handlist -- intdexlist )
+	hl dup variable !
+	count dup variable !
+
+	count ? int_list_make resultlist dup variable !
+	0 index dup variable !
+	while index ? count ? < do
+		0 1 - index ? resultlist ? int_list_set
+		index ? 1 + index !
+	end
+
+	count ? int_list_make checked_list dup variable !
+	0 index !
+	while index ? count ? < do
+		0 index ? checked_list ? int_list_set
+		index ? 1 + index !
+	end
+	0 index !
+
+	0 count_done dup variable !
+	while count_done ? count ? < do
+		// First step find a card that is not in the indexlist
+		0 index !
+		0 current_min dup variable !
+		while index ? count ? < do
+			if index ? checked_list ? int_list_get 0 == do
+				index ? current_min !
+				break
+			end
+			index ? 1 + index !
+		end
+		
+		current_min ? 1 + index !
+		while index ? count ? < do
+			if index ? current_min ? hl ? compare_hands do
+				if index ? checked_list ? int_list_get 0 == do
+					index ? current_min !
+				end
+			end
+			index ? 1 + index !
+		end
+
+
+		current_min ? count_done ? resultlist ? int_list_set
+		1 current_min ? checked_list ? int_list_set
+		count_done ? 1 + count_done !
+	end
+
+	checked_list ? dealloc
+
+	resultlist ?
+end
+
+proc solve do
+	data variable
+	size variable
+	read_file size ! data ! // test
+	"Input Text" print
+	data ? size ? as_string_view print
+
+	if size ? 10.0 < do
+		"File too short" print
+		return
+	end
+	
+
+	0 index dup variable !
+	0 count_hands dup variable !
+	while index ? size ? < do
+		if data ? index ? + ? newline == do
+			count_hands ? 1 + count_hands !
+		end
+		index ? 1 + index !
+	end
+	0 index !
+
+	0 hand_list dup variable !
+	5 2 * 1 + count_hands ? * int_list_make hand_list !
+	0 hi dup variable !
+
+	while hi ? hand_list ? int_list_size < do
+		0 hi ? hand_list ? int_list_set
+		hi ? 1 + hi !
+	end
+	0 hi !
+	0 index !
+
+	while index ? size ? < do
+		
+		0 ci dup variable !
+		while data ? index ? + ? is_alpha data ? index ? + ? is_digit or do
+			// Store the Card inside the handlist/cardlist
+			data ? index ? + ? hi ? 11 * ci ? 2 * + hand_list ? int_list_set
+
+			0 i dup variable !
+			0 current_count dup variable !
+			while i ? ci ? <= do
+				// Check if one of the chars is the same as the current on
+				if i ? 2 * hi ? 11 * + hand_list ? int_list_get
+					ci ? 2 * hi ? 11 * + hand_list ? int_list_get
+					==
+					do
+					// Increase the count for those
+					i ? 2 * 1 + hi ? 11 * + hand_list ? int_list_get
+					if dup 1 + current_count ? > do
+						1 + current_count !
+					end
+					current_count ? i ? 2 * 1 + hi ? 11 * + hand_list ? int_list_set  // Write the count back
+				end
+				i ? 1 + i !
+			end
+
+			index ? 1 + index !
+			ci ? 1 + ci !
+		end
+
+		index ? 1 + index !
+
+		data ? index ? + size ? index ? - parse_number
+		hi ? 11 * 10 +
+		hand_list ? int_list_set
+
+		while data ? index ? + ? newline != do index ? 1 + index ! end
+
+		// "Kind" print
+		// hi ? hand_list ? hand_type print
+
+		hi ? 1 + hi !
+
+		index ? 1 + index !
+	end
+	0 index !
+
+	"Starting to sort..." print
+	count_hands ? hand_list ? sort_hands sorted_indexes dup variable !
+
+
+	0 total dup variable !
+
+	0 index !
+	while index ? sorted_indexes ? int_list_size < do
+		index ? sorted_indexes ? int_list_get hi dup variable !
+		total ? index ? 1 + hi ? 11 * 10 + hand_list ? int_list_get * + total !
+		index ? 1 + index !
+	end
+
+	"Total" print total ? print
+
+	sorted_indexes ? dealloc
+	hand_list ? dealloc
+end
+
+proc main do
+	"std.north" import
+	"int_list.north" import
+	"examples/input7.txt" solve
+end
+

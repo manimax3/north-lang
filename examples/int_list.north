@@ -147,3 +147,22 @@ proc int_list_min do // ( listA -- min(listA) )
 
 	current_min ?
 end
+
+proc int_list_contains do // ( value list -- bool )
+	list dup variable !
+	value dup variable !
+	
+	if list ? int_list_size 0 == do
+		false return
+	end
+
+	0 index dup variable !
+	while index ? list ? int_list_size < do
+		if value ? index ? list ? int_list_get == do
+			true return
+		end
+		index ? 1 + index !
+	end
+
+	false return
+end
