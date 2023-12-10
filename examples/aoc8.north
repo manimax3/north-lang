@@ -1,0 +1,194 @@
+proc find_node do // ( string_view map_list -- index )
+	ml dup variable !
+	node dup variable !
+	0 index dup variable !
+	while true do
+		if ml ? index ? 9 * + 3 as_string_view node ? == do
+			index ? return
+		end
+		index ? 1 + index !
+	end
+end
+
+proc find_starting_nodes do // ( count_entries map_list -- indexlist )
+	map dup variable !
+	count dup variable !
+
+	0 int_list_make result dup variable !
+	0 index dup variable !
+	while index ? count ? < do
+		if map ? index ? 9 * + 2 + ? "A" 0 string_view_get == do
+			index ? result ? int_list_append result !
+		end
+		index ? 1 + index !
+	end
+	result ?
+end
+
+proc step_nodes do // ( left count_entries map_list indexlist )
+	il dup variable !
+	ml dup variable !
+	count dup variable !
+	left dup variable !
+
+	0 index dup variable !
+	while index ? il ? int_list_size < do
+		index ? il ? int_list_get node_index dup variable !
+		if left ? do
+			ml ? node_index ? 9 * 3 + + 3 as_string_view ml ? find_node node_index !
+		else
+			ml ? node_index ? 9 * 6 + + 3 as_string_view ml ? find_node node_index !
+		end
+		node_index ? index ? il ? int_list_set
+		index ? 1 + index !
+	end
+end
+
+proc all_nodes_final do // ( map_list indexlist -- bool )
+	il dup variable !
+	ml dup variable !
+
+	0 index dup variable !
+	while index ? il ? int_list_size < do
+		index ? il ? int_list_get node_index dup variable !
+		if ml ? node_index ? 9 * 2 + + ? "Z" 0 string_view_get != do
+			false return
+		end
+		index ? 1 + index !
+	end
+	true return
+end
+
+proc solve do
+	data variable
+	size variable
+	read_file size ! data ! // test
+	// "Input Text" print
+	// data ? size ? as_string_view print
+
+	if size ? 10.0 < do
+		"File too short" print
+		return
+	end
+
+	0 index dup variable !
+
+	while data ? index ? + ? newline != do
+		index ? 1 + index !
+	end
+	index ? int_list_make steps_list dup variable !
+
+	0 index !
+	while data ? index ? + ? newline != do
+		data ? index ? + ? index ? steps_list ? int_list_set
+		index ? 1 + index !
+	end
+
+	// "Steps" print
+	// steps_list ? int_list_print
+
+	// Skip of newlines
+	index ? 2 + index !
+	index ? startofmap dup variable !
+
+	0 count_entries dup variable !
+	while index ? size ? < do
+		if data ? index ? + ? newline == do
+			count_entries ? 1 + count_entries !
+		end
+		index ? 1 + index !
+	end
+
+	startofmap ? index !
+	count_entries ? 9 * alloc map_list dup variable !
+	0 entry dup variable !
+	0 entry_element dup variable !
+
+	while index ? size ? < do
+		0 entry_element dup variable !
+		while data ? index ? + ? is_alnum do
+			data ? index ? + ? map_list ? entry ? 9 * entry_element ? + + !
+			entry_element ? 1 + entry_element !
+			index ? 1 + index !
+		end
+
+		while data ? index ? + ? "(" 0 string_view_get != do index ? 1 + index ! end
+		index ? 1 + index !
+
+		while data ? index ? + ? is_alnum do
+			data ? index ? + ? map_list ? entry ? 9 * entry_element ? + + !
+			entry_element ? 1 + entry_element !
+			index ? 1 + index !
+		end
+
+		while data ? index ? + ? is_alnum not do index ? 1 + index ! end
+
+		while data ? index ? + ? is_alnum do
+			data ? index ? + ? map_list ? entry ? 9 * entry_element ? + + !
+			entry_element ? 1 + entry_element !
+			index ? 1 + index !
+		end
+
+		entry ? 1 + entry !
+		index ? 2 + index !
+	end
+
+	// Find the start and end index
+	// "AAA" map_list ? find_node start_index dup variable !
+	// "ZZZ" map_list ? find_node end_index dup variable !
+
+	0 index !
+
+	// "Startindex" print start_index ? print
+	// "Endindex" print end_index ? print
+
+	// 0 step_count dup variable !
+	// start_index ? node_index dup variable !
+	// 0 step_index dup variable !
+	// while node_index ? end_index ? != do
+	// 	if step_index ? steps_list ? int_list_get "L" 0 string_view_get == do
+	// 		map_list ? node_index ? 9 * 3 + + 3 as_string_view map_list ? find_node node_index !
+	// 	end
+
+	// 	if step_index ? steps_list ? int_list_get "R" 0 string_view_get == do
+	// 		map_list ? node_index ? 9 * 6 + + 3 as_string_view map_list ? find_node node_index !
+	// 	end
+
+	// 	step_count ? 1 + step_count !
+	// 	step_index ? 1 + steps_list ? int_list_size mod step_index !
+	// end
+
+	// "Total steps for non ghosts (Part 1)" print step_count ? print
+
+	count_entries ? map_list ? find_starting_nodes starting_nodes dup variable !
+	"Starting nodes" print
+	starting_nodes ? int_list_print
+
+	0 step_count dup variable !
+	0 step_index dup variable !
+	while map_list ? starting_nodes ? all_nodes_final not do
+		if step_index ? steps_list ? int_list_get "L" 0 string_view_get == do
+			true count_entries ? map_list ? starting_nodes ? step_nodes
+		end
+
+		if step_index ? steps_list ? int_list_get "R" 0 string_view_get == do
+			false count_entries ? map_list ? starting_nodes ? step_nodes
+		end
+
+		step_count ? 1 + dup print step_count !
+		step_index ? 1 + steps_list ? int_list_size mod step_index !
+	end
+
+	"Total steps for ghosts (Part 2)" print step_count ? print
+
+	starting_nodes ? dealloc
+	steps_list ? dealloc
+	map_list ? dealloc
+	data ? dealloc
+end
+
+proc main do
+	"std.north" import
+	"int_list.north" import
+	"examples/input8.txt" solve
+end

@@ -17,6 +17,10 @@ proc is_alpha do // ( char -- bool )
 		or
 end
 
+proc is_alnum do
+	dup is_alpha over is_digit or drop2
+end
+
 proc int_list_parse_line do // ( data remaining -- int_list )
 	remaining dup variable !
 	data dup variable !

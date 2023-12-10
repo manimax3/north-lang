@@ -67,3 +67,7 @@ proc parse_number do
 	
 	result ?
 end
+
+proc mod do
+	over over / * - // a%b = a - (b * (a/b))
+end
